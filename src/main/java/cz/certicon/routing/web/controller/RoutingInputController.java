@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cz.certicon.routing.routing_web.controller;
+package cz.certicon.routing.web.controller;
 
 import cz.certicon.routing.application.algorithm.DistanceFactory;
 import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
@@ -14,6 +14,7 @@ import cz.certicon.routing.data.basic.StringDestination;
 import cz.certicon.routing.data.graph.database.DatabaseGraphRW;
 import cz.certicon.routing.data.pathexport.SeznamApiPathExporter;
 import cz.certicon.routing.model.basic.Pair;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.model.entity.Graph;
 import cz.certicon.routing.model.entity.GraphEntityFactory;
 import cz.certicon.routing.model.entity.Node;
@@ -21,6 +22,7 @@ import cz.certicon.routing.model.entity.Path;
 import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphEntityFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,11 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Michael Blaha {@literal <michael.blaha@certicon.cz>}
  */
 @RestController
-@RequestMapping("/routing")
+@RequestMapping( "/rest" )
 public class RoutingInputController {
 
     @RequestMapping( "/route" )
-    public String route( @RequestParam( value = "latFrom" ) double latFrom,
+    public List<Coordinate> route( @RequestParam( value = "latFrom" ) double latFrom,
             @RequestParam( value = "lonFrom" ) double lonFrom,
             @RequestParam( value = "latTo" ) double latTo,
             @RequestParam( value = "lonTo" ) double lonTo ) {
@@ -70,14 +72,15 @@ public class RoutingInputController {
                 System.out.println( "No path has been found." );
                 return null;
             }
+            return route.getCoordinates();
 //            System.out.println( "route = " + route );
 //            System.out.println( "nodes = " + route.getNodes() );
 //            System.out.println( "edges = " + route.getEdges() );
 //            System.out.println( "coordinates = " + route.getCoordinates() );
-            StringDestination dest = new StringDestination();
-            PathExporter pathExporter = new SeznamApiPathExporter();
-            pathExporter.exportPath( dest, route );
-            return dest.getResult();
+//            StringDestination dest = new StringDestination();
+//            PathExporter pathExporter = new SeznamApiPathExporter();
+//            pathExporter.exportPath( dest, route );
+//            return dest.getResult();
         } catch ( IOException ex ) {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
         }
