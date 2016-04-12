@@ -38,8 +38,6 @@
                                             SMap.Coords.fromWGS84(val.longitude, val.latitude)
                                             );
                                 });
-                                var m = new SMap(JAK.gel("map"));
-                                var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
                                 m.addDefaultControls();
                                 var layer = new SMap.Layer.Geometry();
                                 m.addLayer(layer).enable();
@@ -84,5 +82,9 @@
             </form>
             <button type="button" onClick="route()">route!</button>
         </div>
+        <script type="text/javascript">
+            var m = new SMap(JAK.gel("map"));
+            var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
+        </script>
     </body>
 </html>
