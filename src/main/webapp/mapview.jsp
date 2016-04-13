@@ -13,6 +13,8 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
         <script>Loader.load();</script>
         <script type="text/javascript">
+            var layer;
+            var marksLayer;
             function route() {
                 $(document).ready(function () {
                     var coords = [];
@@ -21,6 +23,12 @@
                     lonFrom = document.getElementById('fromLon').value;
                     latTo = document.getElementById('toLat').value;
                     lonTo = document.getElementById('toLon').value;
+                    if (typeof layer !== 'undefined') {
+                        layer.removeAll();
+                    }
+                    if (typeof marksLayer !== 'undefined') {
+                        marksLayer.removeAll();
+                    }
                     $.getJSON("http://localhost:8084/routing/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
                             function (data) {
                                 //console.log(data);
@@ -38,14 +46,13 @@
                                             SMap.Coords.fromWGS84(val.longitude, val.latitude)
                                             );
                                 });
-                                m.addDefaultControls();
-                                var layer = new SMap.Layer.Geometry();
+                                layer = new SMap.Layer.Geometry();
                                 m.addLayer(layer).enable();
                                 var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
                                 layer.addGeometry(g);
                                 var cz = m.computeCenterZoom(coords, true);
                                 m.setCenterZoom(cz[0], cz[1]);
-                                var marksLayer = new SMap.Layer.Marker();
+                                marksLayer = new SMap.Layer.Marker();
                                 m.addLayer(marksLayer);
                                 marksLayer.enable();
                                 var options = {};
@@ -83,8 +90,32 @@
             <button type="button" onClick="route()">route!</button>
         </div>
         <script type="text/javascript">
+            var first = true;
             var m = new SMap(JAK.gel("map"));
             var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
+            m.addDefaultControls();
+
+            function click(e, elm) {
+                var coords = SMap.Coords.fromEvent(e.data.event, m);
+                //alert("Kliknuto na " + coords.toWGS84(2).reverse().join(" "));
+                //console.log(coords.toWGS84(0));
+                //console.log(coords.toWGS84(1));
+                //console.log(coords.toWGS84(2));
+                var lon = coords.toWGS84(0)[0];
+                //console.log(lon.substring(0, lon.length - 2));
+                var lat = coords.toWGS84(0)[1];
+                //console.log(lat.substring(0, lat.length - 2));
+                if (first) {
+                    document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
+                    document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
+                    first = false;
+                } else {
+                    document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
+                    document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
+                    first = true;
+                }
+            }
+            m.getSignals().addListener(window, "map-click", click);
         </script>
     </body>
 </html>

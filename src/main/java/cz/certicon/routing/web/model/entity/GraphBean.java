@@ -31,17 +31,16 @@ public class GraphBean implements Serializable {
     @Autowired
     private GraphFactoriesBean graphFactoriesBean;
 
+    @Autowired
+    private DatabasePropertiesBean databasePropertiesBean;
+
     public GraphBean() {
     }
 
     public Graph getGraph() {
         if ( graph == null ) {
-            InputStream in = getClass().getClassLoader().getResourceAsStream( "database_connection.properties" );
-            Properties connectionProperties = new Properties();
             try {
-                connectionProperties.load( in );
-                in.close();
-                DatabaseGraphRW db = new DatabaseGraphRW( connectionProperties );
+                DatabaseGraphRW db = new DatabaseGraphRW( databasePropertiesBean.getConnectionProperties() );
                 graph = db.read( new Pair<>( graphFactoriesBean.getGraphEntityFactory(), graphFactoriesBean.getDistanceFactory() ) );
                 db.close();
             } catch ( IOException ex ) {
@@ -50,9 +49,5 @@ public class GraphBean implements Serializable {
             }
         }
         return graph;
-    }
-
-    public GraphFactoriesBean getGraphFactoriesBean() {
-        return graphFactoriesBean;
     }
 }
