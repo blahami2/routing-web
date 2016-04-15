@@ -15,56 +15,46 @@
         <script type="text/javascript">
             var layer;
             var marksLayer;
+            var m; 
             function route() {
-                $(document).ready(function () {
-                    var coords = [];
+                var coords = [];
 
-                    latFrom = document.getElementById('fromLat').value;
-                    lonFrom = document.getElementById('fromLon').value;
-                    latTo = document.getElementById('toLat').value;
-                    lonTo = document.getElementById('toLon').value;
-                    if (typeof layer !== 'undefined') {
-                        layer.removeAll();
-                    }
-                    if (typeof marksLayer !== 'undefined') {
-                        marksLayer.removeAll();
-                    }
-                    $.getJSON("http://localhost:8084/routing/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
-                            function (data) {
-                                //console.log(data);
-                                //var items = [];
-                                //$.each(data, function (key, val) {
-                                //    console.log(key + ":" + val.latitude);
-                                //items.push("<li id='" + key + "'>" + val + "</li>");
-                                //});
-                                //$("<ul/>", {
-                                //    "class": "my-new-list",
-                                //    html: items.join("")
-                                //}).appendTo("body");
-                                $.each(data, function (key, val) {
-                                    coords.push(
-                                            SMap.Coords.fromWGS84(val.longitude, val.latitude)
-                                            );
-                                });
-                                layer = new SMap.Layer.Geometry();
-                                m.addLayer(layer).enable();
-                                var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
-                                layer.addGeometry(g);
-                                var cz = m.computeCenterZoom(coords, true);
-                                m.setCenterZoom(cz[0], cz[1]);
-                                marksLayer = new SMap.Layer.Marker();
-                                m.addLayer(marksLayer);
-                                marksLayer.enable();
-                                var options = {};
-                                var marker = new SMap.Marker(coords[0], "Start", options);
-                                marksLayer.addMarker(marker);
-                                var marker = new SMap.Marker(coords[coords.length - 1], "Destination", options);
-                                marksLayer.addMarker(marker);
+                latFrom = document.getElementById('fromLat').value;
+                lonFrom = document.getElementById('fromLon').value;
+                latTo = document.getElementById('toLat').value;
+                lonTo = document.getElementById('toLon').value;
+                layer.removeAll();
+                marksLayer.removeAll();
+                $.getJSON("http://localhost:8084/routing/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
+                        function (data) {
+                            //console.log(data);
+                            //var items = [];
+                            //$.each(data, function (key, val) {
+                            //    console.log(key + ":" + val.latitude);
+                            //items.push("<li id='" + key + "'>" + val + "</li>");
+                            //});
+                            //$("<ul/>", {
+                            //    "class": "my-new-list",
+                            //    html: items.join("")
+                            //}).appendTo("body");
+                            $.each(data, function (key, val) {
+                                coords.push(
+                                        SMap.Coords.fromWGS84(val.longitude, val.latitude)
+                                        );
                             });
-                    //console.log("doing some stuff");
-                    //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
-                });
-            }
+                            var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
+                            layer.addGeometry(g);
+                            var cz = m.computeCenterZoom(coords, true);
+                            m.setCenterZoom(cz[0], cz[1]);
+                            var options = {};
+                            var marker = new SMap.Marker(coords[0], "Start", options);
+                            marksLayer.addMarker(marker);
+                            var marker = new SMap.Marker(coords[coords.length - 1], "Destination", options);
+                            marksLayer.addMarker(marker);
+                        });
+                //console.log("doing some stuff");
+                //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
+            };
         </script>
         <title>JSP Page</title>
     </head>
@@ -90,32 +80,46 @@
             <button type="button" onClick="route()">route!</button>
         </div>
         <script type="text/javascript">
-            var first = true;
-            var m = new SMap(JAK.gel("map"));
-            var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
-            m.addDefaultControls();
+            $(document).ready(function () {
+                var first = true;
+                m = new SMap(JAK.gel("map"));
+                var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
+                m.addDefaultControls();
+                layer = new SMap.Layer.Geometry();
+                m.addLayer(layer).enable();
+                marksLayer = new SMap.Layer.Marker();
+                m.addLayer(marksLayer);
+                marksLayer.enable();
 
-            function click(e, elm) {
-                var coords = SMap.Coords.fromEvent(e.data.event, m);
-                //alert("Kliknuto na " + coords.toWGS84(2).reverse().join(" "));
-                //console.log(coords.toWGS84(0));
-                //console.log(coords.toWGS84(1));
-                //console.log(coords.toWGS84(2));
-                var lon = coords.toWGS84(0)[0];
-                //console.log(lon.substring(0, lon.length - 2));
-                var lat = coords.toWGS84(0)[1];
-                //console.log(lat.substring(0, lat.length - 2));
-                if (first) {
-                    document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
-                    document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
-                    first = false;
-                } else {
-                    document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
-                    document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
-                    first = true;
+                function click(e, elm) {
+                    var coords = SMap.Coords.fromEvent(e.data.event, m);
+                    //alert("Kliknuto na " + coords.toWGS84(2).reverse().join(" "));
+                    //console.log(coords.toWGS84(0));
+                    //console.log(coords.toWGS84(1));
+                    //console.log(coords.toWGS84(2));
+                    var lon = coords.toWGS84(0)[0];
+                    //console.log(lon.substring(0, lon.length - 2));
+                    var lat = coords.toWGS84(0)[1];
+                    //console.log(lat.substring(0, lat.length - 2));
+
+                    var options = {};
+                    if (first) {
+                        document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
+                        document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
+                        var marker = new SMap.Marker(coords, "Start", options);
+                        marksLayer.removeAll();
+                        marksLayer.addMarker(marker);
+                        first = false;
+                    } else {
+                        document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
+                        document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
+                        var marker = new SMap.Marker(coords, "Destination", options);
+                        marksLayer.addMarker(marker);
+                        first = true;
+                    }
                 }
-            }
-            m.getSignals().addListener(window, "map-click", click);
+                m.getSignals().addListener(window, "map-click", click);
+            });
         </script>
     </body>
 </html>
