@@ -16,16 +16,21 @@ import cz.certicon.routing.data.nodesearch.NodeSearcher;
 import cz.certicon.routing.data.nodesearch.database.DatabaseNodeSearcher;
 import cz.certicon.routing.model.basic.Pair;
 import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Edge;
 import cz.certicon.routing.model.entity.Graph;
 import cz.certicon.routing.model.entity.GraphEntityFactory;
 import cz.certicon.routing.model.entity.Node;
 import cz.certicon.routing.model.entity.Path;
 import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphEntityFactory;
+import cz.certicon.routing.utils.GraphUtils;
+import cz.certicon.routing.utils.measuring.TimeMeasurement;
+import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.model.entity.DatabasePropertiesBean;
 import cz.certicon.routing.web.model.entity.GraphBean;
 import cz.certicon.routing.web.model.entity.GraphFactoriesBean;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -98,26 +103,32 @@ public class RoutingInputController {
 //        } catch ( IOException ex ) {
 //            Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
 //        }
-        RoutingAlgorithm routingAlgorithm = new StraightLineAStarRoutingAlgorithm(
-                graphBean.getGraph(),
-                graphFactoriesBean.getGraphEntityFactory(),
-                graphFactoriesBean.getDistanceFactory() );
-        Coordinates from = new Coordinates( latFrom, lonFrom );
-        Coordinates to = new Coordinates( latTo, lonTo );
-
-        NodeSearcher ns = new DatabaseNodeSearcher( databasePropertiesBean.getConnectionProperties() );
         try {
+            RoutingAlgorithm routingAlgorithm = new StraightLineAStarRoutingAlgorithm(
+                    graphBean.getGraph(),
+                    graphFactoriesBean.getGraphEntityFactory(),
+                    graphFactoriesBean.getDistanceFactory() );
+            Coordinates from = new Coordinates( latFrom, lonFrom );
+            Coordinates to = new Coordinates( latTo, lonTo );
+
+            NodeSearcher ns = new DatabaseNodeSearcher( databasePropertiesBean.getConnectionProperties() );
             System.out.println( "from: " + from );
             System.out.println( "to: " + to );
             Map<Coordinates, Distance> fromMap = ns.findClosestNodes( from, graphFactoriesBean.getDistanceFactory() );
             Map<Coordinates, Distance> toMap = ns.findClosestNodes( to, graphFactoriesBean.getDistanceFactory() );
             System.out.println( "from map = " + fromMap );
             System.out.println( "to map = " + toMap );
+            TimeMeasurement time = new TimeMeasurement();
+            time.setTimeUnits( TimeUnits.MILLISECONDS );
+            time.start();
             Path route = routingAlgorithm.route( fromMap, toMap );
+            time.stop();
+            System.out.println( "time = " + time.getTimeElapsed() );
             if ( route == null ) {
                 System.out.println( "path not found" );
             } else {
                 System.out.println( "path found" );
+                GraphUtils.fillWithCoordinates( route.getEdges(), graphBean.getCoordinates( new HashSet<>( route.getEdges() ) ) );
                 return route.getCoordinates();
             }
         } catch ( IOException ex ) {

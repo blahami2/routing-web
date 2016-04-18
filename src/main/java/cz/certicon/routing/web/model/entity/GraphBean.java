@@ -5,13 +5,20 @@
  */
 package cz.certicon.routing.web.model.entity;
 
+import cz.certicon.routing.data.coordinates.CoordinateReader;
+import cz.certicon.routing.data.coordinates.database.DatabaseCoordinatesRW;
 import cz.certicon.routing.data.graph.database.DatabaseGraphRW;
 import cz.certicon.routing.model.basic.Pair;
+import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Edge;
 import cz.certicon.routing.model.entity.Graph;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +34,7 @@ import org.springframework.stereotype.Component;
 public class GraphBean implements Serializable {
 
     private Graph graph;
+    private CoordinateReader coordinateReader;
 
     @Autowired
     private GraphFactoriesBean graphFactoriesBean;
@@ -37,17 +45,19 @@ public class GraphBean implements Serializable {
     public GraphBean() {
     }
 
-    public Graph getGraph() {
+    public Graph getGraph() throws IOException {
         if ( graph == null ) {
-            try {
-                DatabaseGraphRW db = new DatabaseGraphRW( databasePropertiesBean.getConnectionProperties() );
-                graph = db.read( new Pair<>( graphFactoriesBean.getGraphEntityFactory(), graphFactoriesBean.getDistanceFactory() ) );
-                db.close();
-            } catch ( IOException ex ) {
-                graph = null;
-                Logger.getLogger( GraphBean.class.getName() ).log( Level.SEVERE, null, ex );
-            }
+            DatabaseGraphRW db = new DatabaseGraphRW( databasePropertiesBean.getConnectionProperties() );
+            graph = db.read( new Pair<>( graphFactoriesBean.getGraphEntityFactory(), graphFactoriesBean.getDistanceFactory() ) );
+            db.close();
         }
         return graph;
+    }
+
+    public Map<Edge, List<Coordinates>> getCoordinates( Set<Edge> edges ) throws IOException {
+        if ( coordinateReader == null ) {
+            coordinateReader = new DatabaseCoordinatesRW( databasePropertiesBean.getConnectionProperties() );
+        }
+        return coordinateReader.read( edges );
     }
 }
