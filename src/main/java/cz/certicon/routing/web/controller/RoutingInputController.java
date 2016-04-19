@@ -110,14 +110,14 @@ public class RoutingInputController {
                     graphFactoriesBean.getDistanceFactory() );
             Coordinates from = new Coordinates( latFrom, lonFrom );
             Coordinates to = new Coordinates( latTo, lonTo );
-
-            NodeSearcher ns = new DatabaseNodeSearcher( databasePropertiesBean.getConnectionProperties() );
+            
             System.out.println( "from: " + from );
             System.out.println( "to: " + to );
-            Map<Coordinates, Distance> fromMap = ns.findClosestNodes( from, graphFactoriesBean.getDistanceFactory() );
-            Map<Coordinates, Distance> toMap = ns.findClosestNodes( to, graphFactoriesBean.getDistanceFactory() );
+            Map<Coordinates, Distance> fromMap = graphBean.getClosestNodes( from );
+            Map<Coordinates, Distance> toMap = graphBean.getClosestNodes( to );
             System.out.println( "from map = " + fromMap );
             System.out.println( "to map = " + toMap );
+            
             TimeMeasurement time = new TimeMeasurement();
             time.setTimeUnits( TimeUnits.MILLISECONDS );
             time.start();
@@ -127,7 +127,7 @@ public class RoutingInputController {
             if ( route == null ) {
                 System.out.println( "path not found" );
             } else {
-                System.out.println( "path found" );
+                System.out.println( "path found: length = " + route.getLength() + " km, time = " + (route.getTime() / 3600) + " h" );
                 GraphUtils.fillWithCoordinates( route.getEdges(), graphBean.getCoordinates( new HashSet<>( route.getEdges() ) ) );
                 return route.getCoordinates();
             }
