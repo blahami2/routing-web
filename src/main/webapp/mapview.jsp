@@ -1,10 +1,10 @@
-<%-- 
+<!--<%-- 
     Document   : mapview
     Created on : Apr 12, 2016, 11:15:48 AM
     Author     : Michael Blaha  {@literal <michael.blaha@certicon.cz>}
---%>
+--%>-->
 
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!--<%@page contentType="text/html" pageEncoding="UTF-8"%>-->
 <!DOCTYPE html>
 <html>
     <head>
@@ -15,7 +15,7 @@
         <script type="text/javascript">
             var layer;
             var marksLayer;
-            var m; 
+            var m;
             function route() {
                 var coords = [];
 
@@ -25,7 +25,7 @@
                 lonTo = document.getElementById('toLon').value;
                 layer.removeAll();
                 marksLayer.removeAll();
-                $.getJSON("http://localhost:8084/routing/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
+                $.getJSON("http://localhost:8080/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
                         function (data) {
                             //console.log(data);
                             //var items = [];
@@ -37,11 +37,15 @@
                             //    "class": "my-new-list",
                             //    html: items.join("")
                             //}).appendTo("body");
-                            $.each(data, function (key, val) {
+                            $.each(data.coordinates, function (key, val) {
                                 coords.push(
                                         SMap.Coords.fromWGS84(val.longitude, val.latitude)
                                         );
                             });
+                            document.getElementById('length').value = data.length / 1000;
+                            document.getElementById('time').value = data.time / 3600;
+                            document.getElementById('time_nodesearch').value = data.searchTime;
+                            document.getElementById('time_routing').value = data.routeTime;
                             var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
                             layer.addGeometry(g);
                             var cz = m.computeCenterZoom(coords, true);
@@ -54,7 +58,8 @@
                         });
                 //console.log("doing some stuff");
                 //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
-            };
+            }
+            ;
         </script>
         <title>JSP Page</title>
     </head>
@@ -78,6 +83,21 @@
                 </fieldset>
             </form>
             <button type="button" onClick="route()">route!</button>
+
+            <fieldset>
+                <legend>Result</legend>
+                <label for="length">length[km]:</label>
+                <input id="length" type="text" name="length"/>
+                <label for="time">time[h]:</label>
+                <input id="time" type="text" name="time"/>
+            </fieldset>
+            <fieldset>
+                <legend>Execution statistics</legend>
+                <label for="time_nodesearch">Searching for nodes[ms]:</label>
+                <input id="time_nodesearch" type="text" name="time_nodesearch"/>
+                <label for="time_routing">Routing[ms]:</label>
+                <input id="time_routing" type="text" name="time_routing"/>
+            </fieldset>
         </div>
         <script type="text/javascript">
             $(document).ready(function () {

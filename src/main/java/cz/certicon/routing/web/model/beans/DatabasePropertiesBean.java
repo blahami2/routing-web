@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cz.certicon.routing.web.model.entity;
+package cz.certicon.routing.web.model.beans;
 
 import java.io.IOException;
 import java.io.InputStream;

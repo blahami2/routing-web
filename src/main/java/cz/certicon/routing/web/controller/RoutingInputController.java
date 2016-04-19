@@ -25,9 +25,10 @@ import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphE
 import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
-import cz.certicon.routing.web.model.entity.DatabasePropertiesBean;
-import cz.certicon.routing.web.model.entity.GraphBean;
-import cz.certicon.routing.web.model.entity.GraphFactoriesBean;
+import cz.certicon.routing.web.data.RoutingOutput;
+import cz.certicon.routing.web.model.beans.DatabasePropertiesBean;
+import cz.certicon.routing.web.model.beans.GraphBean;
+import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -58,7 +59,7 @@ public class RoutingInputController {
     private DatabasePropertiesBean databasePropertiesBean;
 
     @RequestMapping( "/route" )
-    public List<Coordinates> route( @RequestParam( value = "latFrom" ) double latFrom,
+    public RoutingOutput route( @RequestParam( value = "latFrom" ) double latFrom,
             @RequestParam( value = "lonFrom" ) double lonFrom,
             @RequestParam( value = "latTo" ) double latTo,
             @RequestParam( value = "lonTo" ) double lonTo ) {
@@ -110,26 +111,29 @@ public class RoutingInputController {
                     graphFactoriesBean.getDistanceFactory() );
             Coordinates from = new Coordinates( latFrom, lonFrom );
             Coordinates to = new Coordinates( latTo, lonTo );
-            
-            System.out.println( "from: " + from );
-            System.out.println( "to: " + to );
-            Map<Coordinates, Distance> fromMap = graphBean.getClosestNodes( from );
-            Map<Coordinates, Distance> toMap = graphBean.getClosestNodes( to );
-            System.out.println( "from map = " + fromMap );
-            System.out.println( "to map = " + toMap );
-            
+
             TimeMeasurement time = new TimeMeasurement();
             time.setTimeUnits( TimeUnits.MILLISECONDS );
+            System.out.println( "from: " + from );
+            System.out.println( "to: " + to );
+            time.start();
+            Map<Coordinates, Distance> fromMap = graphBean.getClosestNodes( from );
+            Map<Coordinates, Distance> toMap = graphBean.getClosestNodes( to );
+            long searchTime = time.stop();
+            System.out.println( "from map = " + fromMap );
+            System.out.println( "to map = " + toMap );
+
             time.start();
             Path route = routingAlgorithm.route( fromMap, toMap );
-            time.stop();
+            long routeTime = time.stop();
             System.out.println( "time = " + time.getTimeElapsed() );
             if ( route == null ) {
                 System.out.println( "path not found" );
             } else {
-                System.out.println( "path found: length = " + route.getLength() + " km, time = " + (route.getTime() / 3600) + " h" );
+                System.out.println( "path found: length = " + route.getLength() + " km, time = " + ( route.getTime() / 3600 ) + " h" );
                 GraphUtils.fillWithCoordinates( route.getEdges(), graphBean.getCoordinates( new HashSet<>( route.getEdges() ) ) );
-                return route.getCoordinates();
+                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, route.getCoordinates(), searchTime, routeTime );
+                return output;
             }
         } catch ( IOException ex ) {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
