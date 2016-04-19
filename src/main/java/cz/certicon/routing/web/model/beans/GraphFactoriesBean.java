@@ -7,6 +7,7 @@ package cz.certicon.routing.web.model.beans;
 
 import cz.certicon.routing.application.algorithm.DistanceFactory;
 import cz.certicon.routing.application.algorithm.data.number.LengthDistanceFactory;
+import cz.certicon.routing.application.algorithm.data.number.TimeDistanceFactory;
 import cz.certicon.routing.model.entity.GraphEntityFactory;
 import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphEntityFactory;
 import javax.enterprise.context.ApplicationScoped;
@@ -27,7 +28,7 @@ public class GraphFactoriesBean {
 
     public GraphFactoriesBean() {
         this.graphEntityFactory = new DirectedNeighborListGraphEntityFactory();
-        this.distanceFactory = new LengthDistanceFactory();
+        this.distanceFactory = new TimeDistanceFactory();
     }
 
     public GraphEntityFactory getGraphEntityFactory() {

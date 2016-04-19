@@ -25,7 +25,7 @@
                 lonTo = document.getElementById('toLon').value;
                 layer.removeAll();
                 marksLayer.removeAll();
-                $.getJSON("http://localhost:8080/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
+                $.getJSON("http://localhost:8084/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
                         function (data) {
                             //console.log(data);
                             //var items = [];
@@ -61,11 +61,16 @@
             }
             ;
         </script>
+        <style type="text/css">
+            input {
+                width: 100%;
+            }
+        </style>
         <title>JSP Page</title>
     </head>
     <body>
-        <div id="map" style="width:1280px; height:1024px; float: left;"></div>
-        <div id="right_panel" style="float: right;">
+        <div id="map" style="width:70%; min-height: 800px; float: left;"></div>
+        <div id="right_panel" style="margin-left: 1%; margin-right: 1%; float: right; width: 28%;">
             <form>
                 <fieldset>
                     <legend>From</legend>
@@ -82,7 +87,7 @@
                     <input id="toLat" type="text" name="latitude" value="50.0526668"/>
                 </fieldset>
             </form>
-            <button type="button" onClick="route()">route!</button>
+            <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>
 
             <fieldset>
                 <legend>Result</legend>
