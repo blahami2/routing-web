@@ -23,9 +23,12 @@
                 lonFrom = document.getElementById('fromLon').value;
                 latTo = document.getElementById('toLat').value;
                 lonTo = document.getElementById('toLon').value;
+                priority = $("input[name=priority]:checked").val();
                 layer.removeAll();
                 marksLayer.removeAll();
-                $.getJSON("http://localhost:8084/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo,
+                requestString = "http://localhost:8084/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
+                console.log(requestString);
+                $.getJSON(requestString,
                         function (data) {
                             //console.log(data);
                             //var items = [];
@@ -65,6 +68,9 @@
             input {
                 width: 100%;
             }
+            input[type="radio"]{
+                width: 15px;
+            }
         </style>
         <title>JSP Page</title>
     </head>
@@ -73,18 +79,29 @@
         <div id="right_panel" style="margin-left: 1%; margin-right: 1%; float: right; width: 28%;">
             <form>
                 <fieldset>
-                    <legend>From</legend>
-                    <label for="longitude">longitude:</label>
-                    <input id="fromLon" type="text" name="longitude" value="14.5131146"/>
-                    <label for="latitude">latitude:</label>
-                    <input id="fromLat" type="text" name="latitude" value="50.1032571"/>
+                    <legend>Route</legend>
+                    <fieldset>
+                        <legend>From</legend>
+                        <label for="longitude">longitude:</label>
+                        <input id="fromLon" type="text" name="longitude" value="14.5131146"/>
+                        <label for="latitude">latitude:</label>
+                        <input id="fromLat" type="text" name="latitude" value="50.1032571"/>
+                    </fieldset>
+                    <fieldset>
+                        <legend>To</legend>
+                        <label for="longitude">longitude:</label>
+                        <input id="toLon" type="text" name="longitude" value="14.3638555"/>
+                        <label for="latitude">latitude:</label>
+                        <input id="toLat" type="text" name="latitude" value="50.0526668"/>
+                    </fieldset>
                 </fieldset>
                 <fieldset>
-                    <legend>To</legend>
-                    <label for="longitude">longitude:</label>
-                    <input id="toLon" type="text" name="longitude" value="14.3638555"/>
-                    <label for="latitude">latitude:</label>
-                    <input id="toLat" type="text" name="latitude" value="50.0526668"/>
+                    <legend>Options</legend>
+                    <fieldset>
+                        <legend>Priority</legend>
+                        <input type="radio" name="priority" value="length" checked> Length<br>
+                        <input type="radio" name="priority" value="time"> Time<br>
+                    </fieldset>
                 </fieldset>
             </form>
             <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>

@@ -6,7 +6,6 @@
 package cz.certicon.routing.web.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -22,8 +21,6 @@ public class MapController {
     @RequestMapping( "/map" )
     public ModelAndView mapView() {
         ModelAndView modelAndView = new ModelAndView( "mapview.jsp" );
-        modelAndView.getModelMap().addAttribute( "name", "YOoooo" );
-        System.out.println( "returning mapview" );
         return modelAndView;
     }
 }

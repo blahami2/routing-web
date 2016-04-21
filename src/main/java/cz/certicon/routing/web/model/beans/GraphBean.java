@@ -6,6 +6,9 @@
 package cz.certicon.routing.web.model.beans;
 
 import cz.certicon.routing.application.algorithm.Distance;
+import cz.certicon.routing.application.algorithm.DistanceFactory;
+import cz.certicon.routing.application.algorithm.data.number.LengthDistanceFactory;
+import cz.certicon.routing.application.algorithm.data.number.TimeDistanceFactory;
 import cz.certicon.routing.data.basic.FileSource;
 import cz.certicon.routing.data.coordinates.CoordinateReader;
 import cz.certicon.routing.data.coordinates.xml.XmlCoordinateReader;
@@ -17,6 +20,9 @@ import cz.certicon.routing.model.basic.Pair;
 import cz.certicon.routing.model.entity.Coordinates;
 import cz.certicon.routing.model.entity.Edge;
 import cz.certicon.routing.model.entity.Graph;
+import cz.certicon.routing.model.entity.GraphEntityFactory;
+import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphEntityFactory;
+import cz.certicon.routing.web.model.Priority;
 import cz.certicon.routing.web.model.Settings;
 import java.io.File;
 import java.io.IOException;
@@ -39,22 +45,39 @@ public class GraphBean implements Serializable {
     private Graph graph;
     private CoordinateReader coordinateReader;
     private NodeSearcher nodeSearcher;
-
-    @Autowired
-    private GraphFactoriesBean graphFactoriesBean;
+    private Priority priority;
+    private GraphEntityFactory graphEntityFactory;
+    private DistanceFactory distanceFactory;
 
     @Autowired
     private DatabasePropertiesBean databasePropertiesBean;
 
     public GraphBean() {
-        System.out.println( "graph: '" + Settings.GRAPH_FILE_PATH + "'"  );
-        System.out.println( "coordinates: '" + Settings.COORDINATES_FILE_PATH + "'"  );
+        priority = Priority.LENGTH;
+        this.graphEntityFactory = new DirectedNeighborListGraphEntityFactory();
+        this.distanceFactory = new LengthDistanceFactory();
+    }
+
+    public void setPriority( Priority priority ) {
+        if ( this.priority != priority ) {
+            switch ( priority ) {
+                case LENGTH:
+                    distanceFactory = new LengthDistanceFactory();
+                    break;
+                case TIME:
+                    distanceFactory = new TimeDistanceFactory();
+                    break;
+            }
+            graph = null;
+            System.gc();
+        }
+        this.priority = priority;
     }
 
     public Graph getGraph() throws IOException {
         if ( graph == null ) {
             GraphReader graphReader = new XmlGraphReader( new FileSource( new File( Settings.GRAPH_FILE_PATH ) ) );//= new DatabaseGraphRW( databasePropertiesBean.getConnectionProperties() );
-            graph = graphReader.read( new Pair<>( graphFactoriesBean.getGraphEntityFactory(), graphFactoriesBean.getDistanceFactory() ) );
+            graph = graphReader.read( new Pair<>( graphEntityFactory, distanceFactory ) );
             graphReader.close();
         }
         return graph;
@@ -74,6 +97,14 @@ public class GraphBean implements Serializable {
         if ( nodeSearcher == null ) {
             nodeSearcher = new GraphNodeSearcher( getGraph() );
         }
-        return nodeSearcher.findClosestNodes( coords, graphFactoriesBean.getDistanceFactory() );
+        return nodeSearcher.findClosestNodes( coords, distanceFactory );
+    }
+
+    public GraphEntityFactory getGraphEntityFactory() {
+        return graphEntityFactory;
+    }
+
+    public DistanceFactory getDistanceFactory() {
+        return distanceFactory;
     }
 }

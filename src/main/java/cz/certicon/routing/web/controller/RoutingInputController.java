@@ -6,38 +6,23 @@
 package cz.certicon.routing.web.controller;
 
 import cz.certicon.routing.application.algorithm.Distance;
-import cz.certicon.routing.application.algorithm.DistanceFactory;
 import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
 import cz.certicon.routing.application.algorithm.algorithms.astar.StraightLineAStarRoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.algorithms.dijkstra.DijkstraRoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.data.number.LengthDistanceFactory;
-import cz.certicon.routing.data.graph.database.DatabaseGraphRW;
-import cz.certicon.routing.data.nodesearch.NodeSearcher;
-import cz.certicon.routing.data.nodesearch.database.DatabaseNodeSearcher;
-import cz.certicon.routing.model.basic.Pair;
 import cz.certicon.routing.model.entity.Coordinates;
-import cz.certicon.routing.model.entity.Edge;
-import cz.certicon.routing.model.entity.Graph;
-import cz.certicon.routing.model.entity.GraphEntityFactory;
-import cz.certicon.routing.model.entity.Node;
 import cz.certicon.routing.model.entity.Path;
-import cz.certicon.routing.model.entity.neighbourlist.DirectedNeighborListGraphEntityFactory;
 import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.data.RoutingOutput;
+import cz.certicon.routing.web.model.Priority;
 import cz.certicon.routing.web.model.beans.DatabasePropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
 import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,7 +47,8 @@ public class RoutingInputController {
     public RoutingOutput route( @RequestParam( value = "latFrom" ) double latFrom,
             @RequestParam( value = "lonFrom" ) double lonFrom,
             @RequestParam( value = "latTo" ) double latTo,
-            @RequestParam( value = "lonTo" ) double lonTo ) {
+            @RequestParam( value = "lonTo" ) double lonTo,
+            @RequestParam( value = "priority" ) String priority ) {
 
 //        GraphEntityFactory graphEntityFactory = new DirectedNeighborListGraphEntityFactory();
 //        DistanceFactory distanceFactory = new LengthDistanceFactory();
@@ -105,10 +91,16 @@ public class RoutingInputController {
 //            Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
 //        }
         try {
+            System.out.println( "priority = " + priority );
+            try {
+                graphBean.setPriority( Priority.valueOfCaseInsensitive( priority ) );
+            } catch ( IllegalArgumentException ex ) {
+                // use default
+            }
             RoutingAlgorithm routingAlgorithm = new StraightLineAStarRoutingAlgorithm(
                     graphBean.getGraph(),
-                    graphFactoriesBean.getGraphEntityFactory(),
-                    graphFactoriesBean.getDistanceFactory() );
+                    graphBean.getGraphEntityFactory(),
+                    graphBean.getDistanceFactory() );
             Coordinates from = new Coordinates( latFrom, lonFrom );
             Coordinates to = new Coordinates( latTo, lonTo );
 
