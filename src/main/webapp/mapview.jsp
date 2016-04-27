@@ -13,6 +13,24 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
         <script>Loader.load();</script>
         <script type="text/javascript">
+            Number.prototype.toHHMMSS = function () {
+                var seconds = Math.floor(this),
+                        hours = Math.floor(seconds / 3600);
+                seconds -= hours * 3600;
+                var minutes = Math.floor(seconds / 60);
+                seconds -= minutes * 60;
+
+                if (hours < 10) {
+                    hours = "0" + hours;
+                }
+                if (minutes < 10) {
+                    minutes = "0" + minutes;
+                }
+                if (seconds < 10) {
+                    seconds = "0" + seconds;
+                }
+                return hours + ':' + minutes + ':' + seconds;
+            };
             var layer;
             var marksLayer;
             var m;
@@ -46,7 +64,7 @@
                                         );
                             });
                             document.getElementById('length').value = data.length / 1000;
-                            document.getElementById('time').value = data.time / 3600;
+                            document.getElementById('time').value = data.time.toHHMMSS();
                             document.getElementById('time_nodesearch').value = data.searchTime;
                             document.getElementById('time_routing').value = data.routeTime;
                             var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);

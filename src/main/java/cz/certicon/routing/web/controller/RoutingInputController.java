@@ -126,12 +126,13 @@ public class RoutingInputController {
 
             time.start();
             Path route = routingAlgorithm.route( fromMap, toMap );
-            long routeTime = time.stop();
+            long routingTime = time.stop();
             System.out.println( "time = " + time.getTimeElapsed() );
             if ( route == null ) {
                 System.out.println( "path not found" );
             } else {
-                System.out.println( "path found: length = " + route.getLength() + " km, time = " + ( route.getTime() / 3600 ) + " h" );
+                double routeTime = route.getTime();
+                double routeLength = route.getLength();
 
                 Node firstNode = route.getSourceNode();
                 Set<Edge> edgesOf = graphBean.getGraph().getEdgesOf( firstNode );
@@ -160,42 +161,52 @@ public class RoutingInputController {
 
                 sourceEdge.setCoordinates( coordinateMap.get( sourceEdge ) );
                 double min = Double.MAX_VALUE;
-                Coordinates minCoord = null;
-                for ( Coordinates coordinate : sourceEdge.getCoordinates() ) {
+                int minIndex = 0;
+                List<Coordinates> sourceEdgeCoordinates = sourceEdge.getCoordinates();
+                for ( int i = 0; i < sourceEdgeCoordinates.size(); i++ ) {
+                    Coordinates coordinate = sourceEdgeCoordinates.get( i );
                     double dist = CoordinateUtils.calculateDistance( coordinate, from );
                     if ( dist < min ) {
                         min = dist;
-                        minCoord = coordinate;
+                        minIndex = i;
                     }
                 }
-                boolean start = false;
-                for ( Coordinates coordinate : sourceEdge.getCoordinates() ) {
-                    if ( coordinate.equals( minCoord ) ) {
-                        start = true;
-                    }
-                    if ( start ) {
-                        coordinates.add( coordinate );
+                double sourceLength = 0;
+                for ( int i = minIndex; i < sourceEdgeCoordinates.size(); i++ ) {
+                    Coordinates coordinate = sourceEdgeCoordinates.get( i );
+                    coordinates.add( coordinate );
+                    if ( i > minIndex ) {
+                        sourceLength += CoordinateUtils.calculateDistance( sourceEdgeCoordinates.get( i - 1 ), coordinate ) / 1000;
                     }
                 }
 
                 coordinates.addAll( route.getCoordinates() );
 
                 min = Double.MAX_VALUE;
-                for ( Coordinates coordinate : targetEdge.getCoordinates() ) {
+                List<Coordinates> targetEdgeCoordinates = targetEdge.getCoordinates();
+                for ( int i = 0; i < targetEdgeCoordinates.size(); i++ ) {
+                    Coordinates coordinate = targetEdgeCoordinates.get( i );
                     double dist = CoordinateUtils.calculateDistance( coordinate, to );
                     if ( dist < min ) {
                         min = dist;
-                        minCoord = coordinate;
+                        minIndex = i;
                     }
                 }
-                for ( Coordinates coordinate : targetEdge.getCoordinates() ) {
+                double targetLength = 0;
+                for ( int i = 0; i <= minIndex; i++ ) {
+                    Coordinates coordinate = targetEdgeCoordinates.get( i );
                     coordinates.add( coordinate );
-                    if ( coordinate.equals( minCoord ) ) {
-                        break;
+                    if ( i > 0 ) {
+                        targetLength += CoordinateUtils.calculateDistance( targetEdgeCoordinates.get( i - 1 ), coordinate ) / 1000;
                     }
                 }
+//                System.out.println( "route size: " + route.getEdges().size() );
+//                System.out.println( "route: " + route.getLength() + ", " + route.getTime() );
+                routeLength += sourceLength + targetLength;
+                routeTime += 3600 * (sourceLength / sourceEdge.getSpeed() + targetLength / targetEdge.getSpeed());
+                System.out.println( "path found: length = " + routeLength + " km, time = " + ( routeTime / 3600 ) + " h" );
 
-                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, coordinates, searchTime, routeTime );
+                RoutingOutput output = new RoutingOutput( routeTime, routeLength * 1000, coordinates, searchTime, routingTime );
                 route.getEdges().stream().forEach( ( edge ) -> {
                     edge.setCoordinates( null );
                 } );
