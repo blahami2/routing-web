@@ -8,8 +8,14 @@ package cz.certicon.routing.web.controller;
 import cz.certicon.routing.application.algorithm.Distance;
 import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
 import cz.certicon.routing.application.algorithm.algorithms.astar.StraightLineAStarRoutingAlgorithm;
+import cz.certicon.routing.data.nodesearch.NodeSearcher;
+import cz.certicon.routing.model.basic.Pair;
 import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Edge;
+import cz.certicon.routing.model.entity.Node;
 import cz.certicon.routing.model.entity.Path;
+import cz.certicon.routing.utils.CoordinateUtils;
+import cz.certicon.routing.utils.GeometryUtils;
 import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
@@ -19,8 +25,11 @@ import cz.certicon.routing.web.model.beans.DatabasePropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
 import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,14 +115,14 @@ public class RoutingInputController {
 
             TimeMeasurement time = new TimeMeasurement();
             time.setTimeUnits( TimeUnits.MILLISECONDS );
-            System.out.println( "from: " + from );
-            System.out.println( "to: " + to );
+            System.out.println( "Searching for nodes..." );
             time.start();
-            Map<Coordinates, Distance> fromMap = graphBean.getClosestNodes( from );
-            Map<Coordinates, Distance> toMap = graphBean.getClosestNodes( to );
+            Pair<Map<Node.Id, Distance>, Long> sourceClosest = graphBean.getClosestNodes( from, NodeSearcher.SearchFor.SOURCE );
+            Map<Node.Id, Distance> fromMap = sourceClosest.a;
+            Pair<Map<Node.Id, Distance>, Long> targetClosest = graphBean.getClosestNodes( to, NodeSearcher.SearchFor.TARGET );
+            Map<Node.Id, Distance> toMap = targetClosest.a;
             long searchTime = time.stop();
-            System.out.println( "from map = " + fromMap );
-            System.out.println( "to map = " + toMap );
+            System.out.println( "Searching done in " + searchTime + " ms! Routing..." );
 
             time.start();
             Path route = routingAlgorithm.route( fromMap, toMap );
@@ -123,8 +132,73 @@ public class RoutingInputController {
                 System.out.println( "path not found" );
             } else {
                 System.out.println( "path found: length = " + route.getLength() + " km, time = " + ( route.getTime() / 3600 ) + " h" );
-                GraphUtils.fillWithCoordinates( route.getEdges(), graphBean.getCoordinates( new HashSet<>( route.getEdges() ) ) );
-                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, route.getCoordinates(), searchTime, routeTime );
+
+                Node firstNode = route.getSourceNode();
+                Set<Edge> edgesOf = graphBean.getGraph().getEdgesOf( firstNode );
+                Edge sourceEdge = null;
+                for ( Edge edge : edgesOf ) {
+                    if ( edge.getDataId() == sourceClosest.b ) {
+                        sourceEdge = edge;
+                        break;
+                    }
+                }
+                Edge targetEdge = null;
+                edgesOf = graphBean.getGraph().getEdgesOf( route.getTargetNode() );
+                for ( Edge edge : edgesOf ) {
+                    if ( edge.getDataId() == targetClosest.b ) {
+                        targetEdge = edge;
+                        break;
+                    }
+                }
+
+                Set<Edge> edgeSet = new HashSet<>( route.getEdges() );
+                edgeSet.add( sourceEdge );
+                edgeSet.add( targetEdge );
+                Map<Edge, List<Coordinates>> coordinateMap = graphBean.getCoordinates( edgeSet );
+                GraphUtils.fillWithCoordinates( route.getEdges(), coordinateMap );
+                List<Coordinates> coordinates = new ArrayList<>();
+
+                sourceEdge.setCoordinates( coordinateMap.get( sourceEdge ) );
+                double min = Double.MAX_VALUE;
+                Coordinates minCoord = null;
+                for ( Coordinates coordinate : sourceEdge.getCoordinates() ) {
+                    double dist = CoordinateUtils.calculateDistance( coordinate, from );
+                    if ( dist < min ) {
+                        min = dist;
+                        minCoord = coordinate;
+                    }
+                }
+                boolean start = false;
+                for ( Coordinates coordinate : sourceEdge.getCoordinates() ) {
+                    if ( coordinate.equals( minCoord ) ) {
+                        start = true;
+                    }
+                    if ( start ) {
+                        coordinates.add( coordinate );
+                    }
+                }
+
+                coordinates.addAll( route.getCoordinates() );
+
+                min = Double.MAX_VALUE;
+                for ( Coordinates coordinate : targetEdge.getCoordinates() ) {
+                    double dist = CoordinateUtils.calculateDistance( coordinate, to );
+                    if ( dist < min ) {
+                        min = dist;
+                        minCoord = coordinate;
+                    }
+                }
+                for ( Coordinates coordinate : targetEdge.getCoordinates() ) {
+                    coordinates.add( coordinate );
+                    if ( coordinate.equals( minCoord ) ) {
+                        break;
+                    }
+                }
+
+                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, coordinates, searchTime, routeTime );
+                route.getEdges().stream().forEach( ( edge ) -> {
+                    edge.setCoordinates( null );
+                } );
                 return output;
             }
         } catch ( IOException ex ) {

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class DatabasePropertiesBean {
 
     private Properties connectionProperties;
+    private Properties spatialiteProperties;
 
     public Properties getConnectionProperties() {
         if ( connectionProperties == null ) {
@@ -36,6 +37,22 @@ public class DatabasePropertiesBean {
             }
         }
         return connectionProperties;
+    }
+    
+    public Properties getSpatialiteProperties(){
+        if ( spatialiteProperties == null ) {
+            InputStream in = getClass().getClassLoader().getResourceAsStream( "spatialite.properties" );
+            spatialiteProperties = new Properties();
+            try {
+                spatialiteProperties.load( in );
+                in.close();
+            } catch ( IOException ex ) {
+                spatialiteProperties = null;
+                Logger.getLogger( GraphBean.class.getName() ).log( Level.SEVERE, null, ex );
+            }
+        }
+        return spatialiteProperties;
+        
     }
 
 }
