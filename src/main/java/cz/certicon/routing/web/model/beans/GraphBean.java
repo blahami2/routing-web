@@ -56,7 +56,7 @@ public class GraphBean implements Serializable {
     private DistanceFactory distanceFactory;
 
     @Autowired
-    private DatabasePropertiesBean databasePropertiesBean;
+    private PropertiesBean databasePropertiesBean;
 
     public GraphBean() {
         priority = Priority.LENGTH;
@@ -98,7 +98,7 @@ public class GraphBean implements Serializable {
             case LENGTH:
                 distanceFactory = new LengthDistanceFactory();
                 if ( lengthGraph == null ) {
-                    GraphReader graphReader = new SqliteGraphRW( databasePropertiesBean.getSpatialiteProperties() );
+                    GraphReader graphReader = new SqliteGraphRW( databasePropertiesBean.getProperties() );
                     lengthGraph = graphReader.read( new Pair<>( graphEntityFactory, distanceFactory ) );
                     graphReader.close();
                 }
@@ -107,7 +107,7 @@ public class GraphBean implements Serializable {
             case TIME:
                 distanceFactory = new TimeDistanceFactory();
                 if ( timeGraph == null ) {
-                    GraphReader graphReader = new SqliteGraphRW( databasePropertiesBean.getSpatialiteProperties() );
+                    GraphReader graphReader = new SqliteGraphRW( databasePropertiesBean.getProperties() );
                     timeGraph = graphReader.read( new Pair<>( graphEntityFactory, distanceFactory ) );
                     graphReader.close();
                 }
@@ -119,7 +119,7 @@ public class GraphBean implements Serializable {
 
     public Map<Edge, List<Coordinates>> getCoordinates( Set<Edge> edges ) throws IOException {
         if ( coordinateReader == null ) {
-            coordinateReader = new SqliteCoordinateRW( databasePropertiesBean.getSpatialiteProperties() );
+            coordinateReader = new SqliteCoordinateRW( databasePropertiesBean.getProperties() );
             //new XmlCoordinateReader( new FileSource( new File( Settings.COORDINATES_FILE_PATH ) ) );
             //new DatabaseCoordinatesRW( databasePropertiesBean.getConnectionProperties() );
         }
@@ -131,7 +131,7 @@ public class GraphBean implements Serializable {
 
     public Pair<Map<Node.Id, Distance>, Long> getClosestNodes( Coordinates coords, NodeSearcher.SearchFor searchFor ) throws IOException {
         if ( nodeSearcher == null ) {
-            nodeSearcher = new SqliteNodeSearcher( databasePropertiesBean.getSpatialiteProperties() );
+            nodeSearcher = new SqliteNodeSearcher( databasePropertiesBean.getProperties() );
             //new GraphNodeSearcher( getGraph() );
         }
         return nodeSearcher.findClosestNodes( coords, distanceFactory, searchFor );

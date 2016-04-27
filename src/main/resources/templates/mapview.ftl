@@ -19,7 +19,7 @@
                 priority = $("input[name=priority]:checked").val();
                 layer.removeAll();
                 marksLayer.removeAll();//http://localhost:8084/rest
-                requestString = "${url}/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
+                requestString = "${url}rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
                 console.log(requestString);
                 $.getJSON(requestString,
                         function (data) {

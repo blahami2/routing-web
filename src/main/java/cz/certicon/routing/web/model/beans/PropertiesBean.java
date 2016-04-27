@@ -5,6 +5,9 @@
  */
 package cz.certicon.routing.web.model.beans;
 
+import cz.certicon.routing.web.model.Settings;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -19,7 +22,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Scope( "singleton" )
-public class DatabasePropertiesBean {
+public class PropertiesBean {
 
     private Properties connectionProperties;
     private Properties spatialiteProperties;
@@ -38,12 +41,22 @@ public class DatabasePropertiesBean {
         }
         return connectionProperties;
     }
-    
-    public Properties getSpatialiteProperties(){
+
+    public Properties getProperties() {
         if ( spatialiteProperties == null ) {
-            InputStream in = getClass().getClassLoader().getResourceAsStream( "spatialite.properties" );
-            spatialiteProperties = new Properties();
             try {
+                InputStream in = null;
+                try {
+                    if ( Settings.PROPERTIES_PATH != null ) {
+                        in = new FileInputStream( Settings.PROPERTIES_PATH );
+                    }
+                } catch ( FileNotFoundException ex ) {
+                    // handled below
+                }
+                if ( in == null ) {
+                    in = getClass().getClassLoader().getResourceAsStream( "spatialite.properties" );
+                }
+                spatialiteProperties = new Properties();
                 spatialiteProperties.load( in );
                 in.close();
             } catch ( IOException ex ) {
@@ -52,7 +65,7 @@ public class DatabasePropertiesBean {
             }
         }
         return spatialiteProperties;
-        
+
     }
 
 }

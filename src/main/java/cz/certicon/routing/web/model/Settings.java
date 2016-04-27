@@ -12,4 +12,5 @@ package cz.certicon.routing.web.model;
 public class Settings {
     public static String GRAPH_FILE_PATH = "C:\\Routing\\Data\\CZ\\CZ.graph.xml";
     public static String COORDINATES_FILE_PATH = "C:\\Routing\\Data\\CZ\\CZ.coords.xml";
+    public static String PROPERTIES_PATH = null;
 }

@@ -21,7 +21,7 @@ import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.data.RoutingOutput;
 import cz.certicon.routing.web.model.Priority;
-import cz.certicon.routing.web.model.beans.DatabasePropertiesBean;
+import cz.certicon.routing.web.model.beans.PropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
 import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class RoutingInputController {
     @Autowired
     private GraphFactoriesBean graphFactoriesBean;
     @Autowired
-    private DatabasePropertiesBean databasePropertiesBean;
+    private PropertiesBean databasePropertiesBean;
 
     @RequestMapping( "/route" )
     public RoutingOutput route( @RequestParam( value = "latFrom" ) double latFrom,

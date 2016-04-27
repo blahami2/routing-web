@@ -5,6 +5,8 @@
  */
 package cz.certicon.routing.web.controller;
 
+import cz.certicon.routing.web.model.beans.PropertiesBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -18,9 +20,13 @@ import org.springframework.web.servlet.ModelAndView;
 //@RequestMapping("/")
 public class MapController {
 
+    @Autowired
+    private PropertiesBean propertiesBean;
+
     @RequestMapping( "/map" )
     public ModelAndView mapView() {
-        ModelAndView modelAndView = new ModelAndView( "mapview.jsp" );
+        ModelAndView modelAndView = new ModelAndView( "mapview" );
+        modelAndView.addObject( "url", propertiesBean.getProperties().getProperty( "route_service_url" ) );
         return modelAndView;
     }
 }
