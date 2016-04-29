@@ -49,12 +49,15 @@ public class PropertiesBean {
                 try {
                     if ( Settings.PROPERTIES_PATH != null ) {
                         in = new FileInputStream( Settings.PROPERTIES_PATH );
+                        System.out.println( "properties loaded properly" );
                     }
                 } catch ( FileNotFoundException ex ) {
+                    System.out.println( "File not found: " + ex.getMessage() );
                     // handled below
                 }
                 if ( in == null ) {
                     in = getClass().getClassLoader().getResourceAsStream( "spatialite.properties" );
+                    System.out.println( "properties overwritten" );
                 }
                 spatialiteProperties = new Properties();
                 spatialiteProperties.load( in );

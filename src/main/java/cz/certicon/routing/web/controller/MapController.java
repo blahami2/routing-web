@@ -27,6 +27,7 @@ public class MapController {
     public ModelAndView mapView() {
         ModelAndView modelAndView = new ModelAndView( "mapview" );
         modelAndView.addObject( "url", propertiesBean.getProperties().getProperty( "route_service_url" ) );
+        System.out.println( modelAndView );
         return modelAndView;
     }
 }

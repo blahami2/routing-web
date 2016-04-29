@@ -94,6 +94,11 @@ public class GraphBean implements Serializable {
     }
 
     public Graph getGraph() throws IOException {
+//        System.out.println( "======================== PRINTING PROPERTIES ========================" );
+//        for ( Map.Entry<Object, Object> entry : databasePropertiesBean.getProperties().entrySet()) {
+//            System.out.println( entry.getKey() + ":" + entry.getValue() );
+//        }
+//        System.out.println( "=====================================================================" );
         switch ( priority ) {
             case LENGTH:
                 distanceFactory = new LengthDistanceFactory();
@@ -118,15 +123,19 @@ public class GraphBean implements Serializable {
     }
 
     public Map<Edge, List<Coordinates>> getCoordinates( Set<Edge> edges ) throws IOException {
+        getCoordinateReader().open();
+        Map<Edge, List<Coordinates>> edgeMap = getCoordinateReader().read( edges );
+        getCoordinateReader().close();
+        return edgeMap;
+    }
+    
+    public CoordinateReader getCoordinateReader(){
         if ( coordinateReader == null ) {
             coordinateReader = new SqliteCoordinateRW( databasePropertiesBean.getProperties() );
             //new XmlCoordinateReader( new FileSource( new File( Settings.COORDINATES_FILE_PATH ) ) );
             //new DatabaseCoordinatesRW( databasePropertiesBean.getConnectionProperties() );
         }
-        coordinateReader.open();
-        Map<Edge, List<Coordinates>> edgeMap = coordinateReader.read( edges );
-        coordinateReader.close();
-        return edgeMap;
+        return coordinateReader;
     }
 
     public Pair<Map<Node.Id, Distance>, Long> getClosestNodes( Coordinates coords, NodeSearcher.SearchFor searchFor ) throws IOException {

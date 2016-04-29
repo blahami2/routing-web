@@ -6,7 +6,7 @@
 
 <!--<%@page contentType="text/html" pageEncoding="UTF-8"%>-->
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="http://api4.mapy.cz/loader.js"></script>
@@ -44,11 +44,11 @@
                 priority = $("input[name=priority]:checked").val();
                 layer.removeAll();
                 marksLayer.removeAll();
-                requestString = "http://localhost:8084/rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
+                requestString = "${url}rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
                 console.log(requestString);
-                $.getJSON(requestString,
+                $.getJSON(requestString)
+                    .done(
                         function (data) {
-                            //console.log(data);
                             //var items = [];
                             //$.each(data, function (key, val) {
                             //    console.log(key + ":" + val.latitude);
@@ -63,6 +63,7 @@
                                         SMap.Coords.fromWGS84(val.longitude, val.latitude)
                                         );
                             });
+                            document.getElementById('result').value = "OK";
                             document.getElementById('length').value = data.length / 1000;
                             document.getElementById('time').value = data.time.toHHMMSS();
                             document.getElementById('time_nodesearch').value = data.searchTime;
@@ -76,7 +77,17 @@
                             marksLayer.addMarker(marker);
                             var marker = new SMap.Marker(coords[coords.length - 1], "Destination", options);
                             marksLayer.addMarker(marker);
-                        });
+                        }
+                    )
+                    .fail(
+                        function () {
+                            document.getElementById('result').value = "NO PATH FOUND";   
+                            document.getElementById('length').value = "";
+                            document.getElementById('time').value = "";
+                            document.getElementById('time_nodesearch').value = "";
+                            document.getElementById('time_routing').value = "";                         
+                        }
+                    );
                 //console.log("doing some stuff");
                 //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
             }

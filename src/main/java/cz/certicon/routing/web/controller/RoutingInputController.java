@@ -25,7 +25,10 @@ import cz.certicon.routing.web.model.beans.PropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
 import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +102,10 @@ public class RoutingInputController {
 //        } catch ( IOException ex ) {
 //            Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
 //        }
-        try {
+        
+
+    /*
+try {
             System.out.println( "priority = " + priority );
             try {
                 graphBean.setPriority( Priority.valueOfCaseInsensitive( priority ) );
@@ -214,7 +220,63 @@ public class RoutingInputController {
             }
         } catch ( IOException ex ) {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
+        }*/
+        
+        
+              try {
+            System.out.println( "priority = " + priority );
+            try {
+                graphBean.setPriority( Priority.valueOfCaseInsensitive( priority ) );
+            } catch ( IllegalArgumentException ex ) {
+                // use default
+            }
+            RoutingAlgorithm routingAlgorithm = new StraightLineAStarRoutingAlgorithm(
+                    graphBean.getGraph(),
+                    graphBean.getGraphEntityFactory(),
+                    graphBean.getDistanceFactory() );
+            Coordinates from = new Coordinates( latFrom, lonFrom );
+            Coordinates to = new Coordinates( latTo, lonTo );
+
+            DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss dd.MM.yyyy " );
+            Calendar cal = Calendar.getInstance();
+            System.out.println( "===================================================" );
+            System.out.println( dateFormat.format( cal.getTime() ) + " - new request" );
+
+            TimeMeasurement time = new TimeMeasurement();
+            time.setTimeUnits( TimeUnits.MILLISECONDS );
+            System.out.println( "Searching for nodes..." );
+            time.start();
+            Pair<Map<Node.Id, Distance>, Long> sourceClosest = graphBean.getClosestNodes( from, NodeSearcher.SearchFor.SOURCE );
+            Map<Node.Id, Distance> fromMap = sourceClosest.a;
+            Pair<Map<Node.Id, Distance>, Long> targetClosest = graphBean.getClosestNodes( to, NodeSearcher.SearchFor.TARGET );
+            Map<Node.Id, Distance> toMap = targetClosest.a;
+            long searchTime = time.stop();
+            System.out.println( "Searching done in " + searchTime + " ms! Routing..." );
+
+            time.start();
+            Path route = routingAlgorithm.route( fromMap, toMap );
+            long routingTime = time.stop();
+            System.out.println( "Routing done in " + time.getTimeElapsed() + " ms! Printing result..." );
+            if ( route == null ) {
+                System.out.println( "Path was not found." );
+            } else {
+
+                route.setSourceOrigin( from, sourceClosest.b );
+                route.setTargetOrigin( to, targetClosest.b );
+                route.loadCoordinates( graphBean.getCoordinateReader() );
+                int routeTime = (int) route.getTime();
+                System.out.println( "Path was found: length = " + route.getLength() + " km, time = " + String.format( "%02d:%02d:%02d", routeTime / 3600, ( routeTime % 3600 ) / 60, routeTime % 60 ) + "." );
+
+                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, route.getCoordinates(), searchTime, routingTime );
+                route.getEdges().stream().forEach( ( edge ) -> {
+                    edge.setCoordinates( null );
+                } );
+                return output;
+            }
+        } catch ( IOException ex ) {
+            Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
         }
+        
         return null;
     }
 }
