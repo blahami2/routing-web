@@ -5,6 +5,7 @@
  */
 package cz.certicon.routing.web.controller;
 
+import cz.certicon.routing.GlobalOptions;
 import cz.certicon.routing.application.algorithm.Distance;
 import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
 import cz.certicon.routing.application.algorithm.algorithms.astar.StraightLineAStarRoutingAlgorithm;
@@ -20,6 +21,7 @@ import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.data.RoutingOutput;
+import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
 import cz.certicon.routing.web.model.beans.PropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
@@ -60,7 +62,8 @@ public class RoutingInputController {
             @RequestParam( value = "lonFrom" ) double lonFrom,
             @RequestParam( value = "latTo" ) double latTo,
             @RequestParam( value = "lonTo" ) double lonTo,
-            @RequestParam( value = "priority" ) String priority ) {
+            @RequestParam( value = "priority" ) String priorityString,
+            @RequestParam( value = "algorithm" ) String algorithmString ) {
 
 //        GraphEntityFactory graphEntityFactory = new DirectedNeighborListGraphEntityFactory();
 //        DistanceFactory distanceFactory = new LengthDistanceFactory();
@@ -102,9 +105,7 @@ public class RoutingInputController {
 //        } catch ( IOException ex ) {
 //            Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
 //        }
-        
-
-    /*
+        /*
 try {
             System.out.println( "priority = " + priority );
             try {
@@ -222,18 +223,22 @@ try {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
         }*/
         
+        GlobalOptions.DEBUG_TIME = true;
         
-              try {
-            System.out.println( "priority = " + priority );
+        try {
+            System.out.println( "priority = " + priorityString );
+            Priority priorityType;
             try {
-                graphBean.setPriority( Priority.valueOfCaseInsensitive( priority ) );
+                priorityType = Priority.valueOfCaseInsensitive( priorityString );
             } catch ( IllegalArgumentException ex ) {
-                // use default
+                priorityType = Priority.TIME;
             }
-            RoutingAlgorithm routingAlgorithm = new StraightLineAStarRoutingAlgorithm(
-                    graphBean.getGraph(),
-                    graphBean.getGraphEntityFactory(),
-                    graphBean.getDistanceFactory() );
+            AlgorithmType algorithmType;
+            try {
+                algorithmType = AlgorithmType.valueOf( algorithmString );
+            } catch ( IllegalArgumentException ex ) {
+                algorithmType = AlgorithmType.CONTRACTION_HIERARCHIES;
+            }
             Coordinates from = new Coordinates( latFrom, lonFrom );
             Coordinates to = new Coordinates( latTo, lonTo );
 
@@ -246,24 +251,26 @@ try {
             time.setTimeUnits( TimeUnits.MILLISECONDS );
             System.out.println( "Searching for nodes..." );
             time.start();
-            Pair<Map<Node.Id, Distance>, Long> sourceClosest = graphBean.getClosestNodes( from, NodeSearcher.SearchFor.SOURCE );
+            Pair<Map<Node.Id, Distance>, Long> sourceClosest = graphBean.getClosestNodes( from, NodeSearcher.SearchFor.SOURCE, priorityType );
             Map<Node.Id, Distance> fromMap = sourceClosest.a;
-            Pair<Map<Node.Id, Distance>, Long> targetClosest = graphBean.getClosestNodes( to, NodeSearcher.SearchFor.TARGET );
+            Pair<Map<Node.Id, Distance>, Long> targetClosest = graphBean.getClosestNodes( to, NodeSearcher.SearchFor.TARGET, priorityType );
             Map<Node.Id, Distance> toMap = targetClosest.a;
             long searchTime = time.stop();
             System.out.println( "Searching done in " + searchTime + " ms! Routing..." );
 
             time.start();
-            Path route = routingAlgorithm.route( fromMap, toMap );
+            Path route = graphBean.getRoutingAlgorithm( priorityType, algorithmType ).route( fromMap, toMap );
             long routingTime = time.stop();
             System.out.println( "Routing done in " + time.getTimeElapsed() + " ms! Printing result..." );
             if ( route == null ) {
                 System.out.println( "Path was not found." );
             } else {
-
+                System.out.println( "Loading coordinates..." );
+                time.start();
                 route.setSourceOrigin( from, sourceClosest.b );
                 route.setTargetOrigin( to, targetClosest.b );
                 route.loadCoordinates( graphBean.getCoordinateReader() );
+                System.out.println( "Loading coordinates done in " + time.stop() + " ms!" );
                 int routeTime = (int) route.getTime();
                 System.out.println( "Path was found: length = " + route.getLength() + " km, time = " + String.format( "%02d:%02d:%02d", routeTime / 3600, ( routeTime % 3600 ) / 60, routeTime % 60 ) + "." );
 
@@ -276,7 +283,7 @@ try {
         } catch ( IOException ex ) {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
         }
-        
+
         return null;
     }
 }

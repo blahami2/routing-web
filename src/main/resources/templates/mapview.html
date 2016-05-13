@@ -36,9 +36,10 @@
                 latTo = document.getElementById('toLat').value;
                 lonTo = document.getElementById('toLon').value;
                 priority = $("input[name=priority]:checked").val();
+                algorithm = $("input[name=algorithm]:checked").val();
                 layer.removeAll();
                 marksLayer.removeAll();
-                requestString = document.getElementById('url').value + "rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority;
+                requestString = document.getElementById('url').value + "rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm;
                 console.log(requestString);
                 $.getJSON(requestString)
                         .done(
@@ -126,9 +127,15 @@
                         <input type="radio" name="priority" value="length" checked="checked"/> Length<br/>
                         <input type="radio" name="priority" value="time"/> Time<br/>
                     </fieldset>
+                    <fieldset>
+                        <legend>Algorithm</legend>
+                        <input type="radio" name="algorithm" value="DIJKSTRA"/> Dijkstra<br/>
+                        <input type="radio" name="algorithm" value="ASTAR"/> A*<br/>
+                        <input type="radio" name="algorithm" value="CONTRACTION_HIERARCHIES" checked="checked"/> Contraction Hierarchies<br/>
+                    </fieldset>
                 </fieldset>
                 <div hidden="hiden">
-                <input type="text" id="url" th:text="${url}" hidden="hidden"/>
+                    <input type="text" id="url" th:text="${url}" hidden="hidden"/>
                 </div>
             </form>
             <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>
@@ -187,6 +194,7 @@
                         document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
                         var marker = new SMap.Marker(coords, "Destination", options);
                         marksLayer.addMarker(marker);
+                        route();
                         first = true;
                     }
                 }
