@@ -15,3 +15,5 @@ hs_err_pid*
 target
 nbproject
 nb-configuration.xml
+
+*.log
