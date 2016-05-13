@@ -85,6 +85,22 @@
             <artifactId>thymeleaf-spring4</artifactId>
             <scope>compile</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>1.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client</artifactId>
+            <version>1.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-script</artifactId>
+            <version>v1-rev4-1.22.0</version>
+        </dependency>
     </dependencies>
 
     <build>
