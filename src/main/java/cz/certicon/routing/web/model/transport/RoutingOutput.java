@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cz.certicon.routing.web.data;
+package cz.certicon.routing.web.model.transport;
 
 import cz.certicon.routing.model.entity.Coordinates;
 import java.util.List;

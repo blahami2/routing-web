@@ -21,7 +21,7 @@ import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
-import cz.certicon.routing.web.data.RoutingOutput;
+import cz.certicon.routing.web.model.transport.RoutingOutput;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
 import cz.certicon.routing.web.model.beans.PropertiesBean;
