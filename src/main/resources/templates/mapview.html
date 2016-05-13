@@ -63,6 +63,7 @@
                                     document.getElementById('time').value = data.time.toHHMMSS();
                                     document.getElementById('time_nodesearch').value = data.searchTime;
                                     document.getElementById('time_routing').value = data.routeTime;
+                                    document.getElementById('time_coordinates').value = data.coordinatesTime;
                                     var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
                                     layer.addGeometry(g);
                                     var cz = m.computeCenterZoom(coords, true);
@@ -81,12 +82,34 @@
                                     document.getElementById('time').value = "";
                                     document.getElementById('time_nodesearch').value = "";
                                     document.getElementById('time_routing').value = "";
+                                    document.getElementById('time_coordinates').value = "";
                                 }
                         );
                 //console.log("doing some stuff");
                 //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
-            }
-            ;
+            };
+            function report() {
+                latFrom = document.getElementById('fromLat').value;
+                lonFrom = document.getElementById('fromLon').value;
+                latTo = document.getElementById('toLat').value;
+                lonTo = document.getElementById('toLon').value;
+                priority = $("input[name=priority]:checked").val();
+                algorithm = $("input[name=algorithm]:checked").val();
+                message = document.getElementById('message').value;
+                requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm + "&message=" + encodeURIComponent(message);
+                console.log(requestString);
+                $.getJSON(requestString)
+                        .done(
+                                function (data) {
+                                    document.getElementById('result').value = "REPORTED";
+                                }
+                        )
+                        .fail(
+                                function () {
+                                    document.getElementById('result').value = "REPORT HAS FAILED";
+                                }
+                        );
+            };
             /*]]>*/
         </script>
         <style type="text/css">
@@ -155,6 +178,14 @@
                 <input id="time_nodesearch" type="text" name="time_nodesearch"/>
                 <label for="time_routing">Routing[ms]:</label>
                 <input id="time_routing" type="text" name="time_routing"/>
+                <label for="time_coordinates">Loading coordinates[ms]:</label>
+                <input id="time_coordinates" type="text" name="time_coordinates"/>
+            </fieldset>
+            <fieldset>
+                <legend>Report</legend>
+                <label for="message">message:</label>
+                <input id="message" type="text" name="result"/>
+                <button type="button" onClick="report()" style="width: 100%; margin: 0%;">report!</button>
             </fieldset>
         </div>
         <script type="text/javascript">

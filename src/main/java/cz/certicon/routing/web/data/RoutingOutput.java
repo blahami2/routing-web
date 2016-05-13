@@ -20,13 +20,15 @@ public class RoutingOutput {
 
     private final long searchTime;
     private final long routeTime;
+    private final long coordinatesTime;
 
-    public RoutingOutput( double time, double length, List<Coordinates> coordinates, long searchTime, long routeTime ) {
+    public RoutingOutput( double time, double length, List<Coordinates> coordinates, long searchTime, long routeTime, long coordinatesTime ) {
         this.time = time;
         this.length = length;
         this.coordinates = coordinates;
         this.searchTime = searchTime;
         this.routeTime = routeTime;
+        this.coordinatesTime = coordinatesTime;
     }
 
     public double getTime() {
@@ -47,6 +49,10 @@ public class RoutingOutput {
 
     public long getRouteTime() {
         return routeTime;
+    }
+
+    public long getCoordinatesTime() {
+        return coordinatesTime;
     }
 
 }

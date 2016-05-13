@@ -18,6 +18,7 @@ import cz.certicon.routing.model.entity.Path;
 import cz.certicon.routing.utils.CoordinateUtils;
 import cz.certicon.routing.utils.GeometryUtils;
 import cz.certicon.routing.utils.GraphUtils;
+import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.data.RoutingOutput;
@@ -49,6 +50,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping( "/rest" )
 public class RoutingInputController {
+
+    private static final String FILENAME = "routing";
 
     @Autowired
     private GraphBean graphBean;
@@ -222,9 +225,8 @@ try {
         } catch ( IOException ex ) {
             Logger.getLogger( RoutingInputController.class.getName() ).log( Level.SEVERE, null, ex );
         }*/
-        
         GlobalOptions.DEBUG_TIME = true;
-        
+
         try {
             System.out.println( "priority = " + priorityString );
             Priority priorityType;
@@ -246,6 +248,10 @@ try {
             Calendar cal = Calendar.getInstance();
             System.out.println( "===================================================" );
             System.out.println( dateFormat.format( cal.getTime() ) + " - new request" );
+            Log.dln( FILENAME, "=== log ===" );
+            Log.dln( FILENAME, dateFormat.format( cal.getTime() ) );
+            Log.dln( FILENAME, "from: " + from );
+            Log.dln( FILENAME, "to: " + to );
 
             TimeMeasurement time = new TimeMeasurement();
             time.setTimeUnits( TimeUnits.MILLISECONDS );
@@ -255,11 +261,13 @@ try {
             Map<Node.Id, Distance> fromMap = sourceClosest.a;
             Pair<Map<Node.Id, Distance>, Long> targetClosest = graphBean.getClosestNodes( to, NodeSearcher.SearchFor.TARGET, priorityType );
             Map<Node.Id, Distance> toMap = targetClosest.a;
+            Log.dln( FILENAME, "search: " + time.getTimeString() );
             long searchTime = time.stop();
             System.out.println( "Searching done in " + searchTime + " ms! Routing..." );
 
             time.start();
             Path route = graphBean.getRoutingAlgorithm( priorityType, algorithmType ).route( fromMap, toMap );
+            Log.dln( FILENAME, "routing: " + time.getTimeString() );
             long routingTime = time.stop();
             System.out.println( "Routing done in " + time.getTimeElapsed() + " ms! Printing result..." );
             if ( route == null ) {
@@ -270,11 +278,16 @@ try {
                 route.setSourceOrigin( from, sourceClosest.b );
                 route.setTargetOrigin( to, targetClosest.b );
                 route.loadCoordinates( graphBean.getCoordinateReader() );
-                System.out.println( "Loading coordinates done in " + time.stop() + " ms!" );
+                Log.dln( FILENAME, "coordinates: " + time.getTimeString() );
+                long coordinatesTime = time.stop();
+                System.out.println( "Loading coordinates done in " + coordinatesTime + " ms!" );
                 int routeTime = (int) route.getTime();
                 System.out.println( "Path was found: length = " + route.getLength() + " km, time = " + String.format( "%02d:%02d:%02d", routeTime / 3600, ( routeTime % 3600 ) / 60, routeTime % 60 ) + "." );
 
-                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, route.getCoordinates(), searchTime, routingTime );
+                Log.dln( FILENAME, "path length: " + route.getLength() );
+                Log.dln( FILENAME, "path time: " + String.format( "%02d:%02d:%02d", routeTime / 3600, ( routeTime % 3600 ) / 60, routeTime % 60 ) );
+
+                RoutingOutput output = new RoutingOutput( route.getTime(), route.getLength() * 1000, route.getCoordinates(), searchTime, routingTime, coordinatesTime );
                 route.getEdges().stream().forEach( ( edge ) -> {
                     edge.setCoordinates( null );
                 } );
