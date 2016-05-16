@@ -23,8 +23,7 @@ public class ArgumentParser {
         chain.addChainLink( (ChainLink<String>) ( String keyval ) -> {
             KeyValuePair parsed = parseKeyValueString( keyval );
             if ( "properties".equals( parsed.getKey() ) ) {
-                System.out.println( "properties path = '" + parsed.getValue() + "'" );
-                Settings.PROPERTIES_PATH = parsed.getValue();
+                Global.PROPERTIES_PATH = parsed.getValue();
                 return true;
             }
             return false;

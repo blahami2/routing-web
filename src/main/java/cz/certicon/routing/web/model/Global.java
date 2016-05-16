@@ -9,7 +9,7 @@ package cz.certicon.routing.web.model;
  *
  * @author Michael Blaha {@literal <michael.blaha@certicon.cz>}
  */
-public class Settings {
+public class Global {
     public static String GRAPH_FILE_PATH = "C:\\Routing\\Data\\CZ\\CZ.graph.xml";
     public static String COORDINATES_FILE_PATH = "C:\\Routing\\Data\\CZ\\CZ.coords.xml";
     public static String PROPERTIES_PATH = null;

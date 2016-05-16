@@ -6,7 +6,7 @@
 package cz.certicon.routing.web;
 
 import cz.certicon.routing.web.model.ArgumentParser;
-import cz.certicon.routing.web.model.Settings;
+import cz.certicon.routing.web.model.Global;
 import java.io.File;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,8 +33,8 @@ public class Application extends SpringBootServletInitializer {
     public static void main( String[] args ) {
         String filePath = "C:\\Routing\\Data\\CZ";
         File file = new File( filePath );
-        Settings.GRAPH_FILE_PATH = file.getAbsolutePath() + File.separator + file.getName() + ".graph.xml";
-        Settings.COORDINATES_FILE_PATH = file.getAbsolutePath() + File.separator + file.getName() + ".coords.xml";
+        Global.GRAPH_FILE_PATH = file.getAbsolutePath() + File.separator + file.getName() + ".graph.xml";
+        Global.COORDINATES_FILE_PATH = file.getAbsolutePath() + File.separator + file.getName() + ".coords.xml";
         ArgumentParser parser = new ArgumentParser();
         parser.parse( args );
         SpringApplication.run( Application.class, args );

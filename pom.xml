@@ -47,7 +47,13 @@
         </dependency>
         <dependency>
             <groupId>com.google.oauth-client</groupId>
-            <artifactId>google-oauth-client-jetty</artifactId>
+            <artifactId>google-oauth-client-servlet</artifactId>
+            <version>1.20.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client-appengine</artifactId>
             <version>1.20.0</version>
             <type>jar</type>
         </dependency>
