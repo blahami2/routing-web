@@ -29,6 +29,7 @@
             var marksLayer;
             var m;
             function route() {
+                document.getElementById('result').value = "";
                 var coords = [];
 
                 latFrom = document.getElementById('fromLat').value;
@@ -87,8 +88,10 @@
                         );
                 //console.log("doing some stuff");
                 //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
-            };
+            }
+            ;
             function report() {
+                document.getElementById('result').value = "";
                 latFrom = document.getElementById('fromLat').value;
                 lonFrom = document.getElementById('fromLon').value;
                 latTo = document.getElementById('toLat').value;
@@ -109,7 +112,8 @@
                                     document.getElementById('result').value = "REPORT HAS FAILED";
                                 }
                         );
-            };
+            }
+            ;
             /*]]>*/
         </script>
         <style type="text/css">

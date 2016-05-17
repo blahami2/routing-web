@@ -7,12 +7,13 @@ package cz.certicon.routing.web.data.logging.report.googleapi;
 
 import com.google.api.services.script.model.ExecutionRequest;
 import com.google.api.services.script.model.Operation;
+import cz.certicon.routing.data.basic.FileSource;
 import cz.certicon.routing.model.entity.Coordinates;
 import cz.certicon.routing.web.data.basic.google.GoogleScriptConnector;
 import cz.certicon.routing.web.data.logging.report.ReportLogger;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -28,7 +29,12 @@ public class GoogleScriptApiReportLogger implements ReportLogger {
     private final String scriptId;
 
     public GoogleScriptApiReportLogger( String jsonCredentialsAbsolutePath, String scriptId ) throws IOException {
-        this.googleScriptConnector = new GoogleScriptConnector( APPLICATION_NAME, new FileInputStream( jsonCredentialsAbsolutePath ) );
+//        StringBuilder sb = new StringBuilder();
+//        Scanner sc = new Scanner( new File( jsonCredentialsAbsolutePath ) );
+//        while ( sc.hasNextLine() ) {
+//            sb.append( sc.nextLine() );
+//        }
+        this.googleScriptConnector = new GoogleScriptConnector( APPLICATION_NAME, new FileSource( new File( jsonCredentialsAbsolutePath ) ) );
         this.scriptId = scriptId;
     }
 
@@ -36,7 +42,7 @@ public class GoogleScriptApiReportLogger implements ReportLogger {
     public void log( Coordinates from, Coordinates to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
         ExecutionRequest request = new ExecutionRequest()
                 .setFunction( "report" )
-                .setParameters( Arrays.asList( Formatter.formatCoordinates( from), Formatter.formatCoordinates( to ),
+                .setParameters( Arrays.asList( Formatter.formatCoordinates( from ), Formatter.formatCoordinates( to ),
                         algorithm.name().toLowerCase(), priority.name().toLowerCase(), message ) )
                 .setDevMode( true );
         Operation op = googleScriptConnector.runScript( scriptId, request );

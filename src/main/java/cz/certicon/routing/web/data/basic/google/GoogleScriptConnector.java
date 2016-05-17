@@ -5,13 +5,11 @@
  */
 package cz.certicon.routing.web.data.basic.google;
 
-import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.servlet.auth.oauth2.AbstractAuthorizationCodeCallbackServlet;
-import com.google.api.client.extensions.servlet.auth.oauth2.AbstractAuthorizationCodeServlet;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.java6.auth.oauth2.VerificationCodeReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.extensions.appengine.auth.oauth2.AppIdentityCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -20,22 +18,28 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import java.util.Map;
 import com.google.api.services.script.model.*;
 import com.google.api.services.script.Script;
+import cz.certicon.routing.data.DataSource;
+import java.io.BufferedReader;
+import java.io.File;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -60,9 +64,9 @@ public class GoogleScriptConnector {
      */
     private final List<String> SCOPES = Arrays.asList( "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets" );
 
-    private final InputStream jsonCredentials;
+    private final DataSource jsonCredentials;
 
-    public GoogleScriptConnector( String applicationName, InputStream jsonCredentials ) throws IOException {
+    public GoogleScriptConnector( String applicationName, DataSource jsonCredentials ) throws IOException {
         this.applicationName = applicationName;
         this.jsonCredentials = jsonCredentials;
         try {
@@ -81,19 +85,20 @@ public class GoogleScriptConnector {
      */
     public Credential authorize() throws IOException {
         // Load client secrets.
-        InputStream in = GoogleScriptConnector.class.getResourceAsStream( "/client_secret.json" );
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load( jsonFactory, new InputStreamReader( jsonCredentials ) );
+//        InputStream in = GoogleScriptConnector.class.getResourceAsStream( "/client_secret.json" );
+
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load( jsonFactory, new InputStreamReader( jsonCredentials.getInputStream() ) );
 
         // Build flow and trigger user authorization request.
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder( httpTransport, jsonFactory, clientSecrets, SCOPES )
                 .setDataStoreFactory( dataStoreFactory )
                 .setAccessType( ACCESS_TYPE )
                 .build();
-        AppIdentityCredential credential = new AppIdentityCredential(SCOPES );
-        
-        //        Credential credential = new AuthorizationCodeInstalledApp( flow, new LocalServerReceiver() ).authorize( "user" );
-                System.out.println( "Credentials saved to " + dataStoreFile.getAbsolutePath() );
+
+        Credential credential = new AuthorizationCodeInstalledApp( flow, new LocalCallbackServer() ).authorize( "user" );
+//        System.out.println( "Credentials saved to " + dataStoreFile.getAbsolutePath() );
         return credential;
+//        throw new UnsupportedOperationException( "Not implemented yet - library missing" );
     }
 
     /**
@@ -230,6 +235,83 @@ public class GoogleScriptConnector {
         } catch ( GoogleJsonResponseException ex ) {
             // The API encountered a problem before the script was called.
             throw new IOException( ex );
+        }
+    }
+
+    public static class LocalCallbackServer implements VerificationCodeReceiver {
+
+        volatile String code;
+        private final int LOCAL_SERVER_PORT = 10006;
+
+        @Override
+        public synchronized String waitForCode() {
+
+            try {
+                this.wait();
+            } catch ( Exception ex ) {
+            }
+            System.out.println( "returning code is -> " + code );
+            return code;
+
+        }
+
+        @Override
+        public String getRedirectUri() {
+
+            new Thread( new MyThread() ).start();
+            return "http://localhost:" + LOCAL_SERVER_PORT;
+        }
+
+        @Override
+        public void stop() {
+        }
+
+        class MyThread implements Runnable {
+
+            @Override
+            public void run() {
+                try {
+                    //    return GoogleOAuthConstants.OOB_REDIRECT_URI;
+                    ServerSocket ss = new ServerSocket( LOCAL_SERVER_PORT );
+                    System.out.println( "server is ready..." );
+                    Socket socket = ss.accept();
+                    System.out.println( "new request...." );
+                    InputStream is = socket.getInputStream();
+                    StringWriter writer = new StringWriter();
+                    String firstLine = null;
+
+                    InputStreamReader isr = new InputStreamReader( is );
+                    StringBuilder sb = new StringBuilder();
+                    BufferedReader br = new BufferedReader( isr );
+                    String read = br.readLine();
+                    firstLine = read;
+                    OutputStream os = socket.getOutputStream();
+                    PrintWriter out = new PrintWriter( os, true );
+
+                    StringTokenizer st = new StringTokenizer( firstLine, " " );
+                    st.nextToken();
+                    String codeLine = st.nextToken();
+                    st = new StringTokenizer( codeLine, "=" );
+                    st.nextToken();
+                    code = st.nextToken();
+
+                    out.write( "RETURNED CODE IS " + code + "" );
+                    out.flush();
+//                is.close();
+
+                    socket.close();
+
+                    System.out.println( "Extracted coded is " + code );
+
+                    synchronized ( LocalCallbackServer.this ) {
+                        LocalCallbackServer.this.notify();
+                    }
+                    System.out.println( "return is " + sb.toString() );
+
+                } catch ( IOException ex ) {
+                    Logger.getLogger( LocalCallbackServer.class.getName() ).log( Level.SEVERE, null, ex );
+                }
+            }
         }
     }
 }
