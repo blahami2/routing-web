@@ -5,7 +5,7 @@
  */
 package cz.certicon.routing.web.controller;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.web.data.logging.report.FakeReportLogger;
 import cz.certicon.routing.web.data.logging.report.ReportLogger;
@@ -74,8 +74,8 @@ public class ReportController {
 //        Log.dln( FILENAME, "=== log ===" );
 //        DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss dd.MM.yyyy" );
 //        Log.dln( FILENAME, dateFormat.format( Calendar.getInstance().getTime() ) );
-        Coordinates from = new Coordinates( latFrom, lonFrom );
-        Coordinates to = new Coordinates( latTo, lonTo );
+        Coordinate from = new Coordinate( latFrom, lonFrom );
+        Coordinate to = new Coordinate( latTo, lonTo );
         Priority priorityType;
         try {
             priorityType = Priority.valueOfCaseInsensitive( priorityString );

@@ -13,8 +13,8 @@ import cz.certicon.routing.application.algorithm.algorithms.ch.OptimizedContract
 import cz.certicon.routing.application.algorithm.algorithms.dijkstra.DijkstraRoutingAlgorithm;
 import cz.certicon.routing.application.algorithm.data.number.LengthDistanceFactory;
 import cz.certicon.routing.application.algorithm.data.number.TimeDistanceFactory;
+import cz.certicon.routing.data.DistanceType;
 import cz.certicon.routing.data.ch.ContractionHierarchiesDataRW;
-import cz.certicon.routing.data.ch.DistanceType;
 import cz.certicon.routing.data.ch.sqlite.SqliteContractionHierarchiesDataRW;
 import cz.certicon.routing.data.coordinates.CoordinateReader;
 import cz.certicon.routing.data.coordinates.sqlite.SqliteCoordinateRW;
@@ -23,8 +23,9 @@ import cz.certicon.routing.data.graph.sqlite.SqliteGraphRW;
 import cz.certicon.routing.data.nodesearch.NodeSearcher;
 import cz.certicon.routing.data.nodesearch.sqlite.SqliteNodeSearcher;
 import cz.certicon.routing.model.basic.Pair;
+import cz.certicon.routing.model.basic.TimeUnits;
 import cz.certicon.routing.model.basic.Trinity;
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.model.entity.Edge;
 import cz.certicon.routing.model.entity.Graph;
 import cz.certicon.routing.model.entity.GraphEntityFactory;
@@ -32,7 +33,6 @@ import cz.certicon.routing.model.entity.Node;
 import cz.certicon.routing.model.entity.Shortcut;
 import cz.certicon.routing.model.entity.neighbourlist.NeighborListGraphEntityFactory;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
-import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
 import java.io.IOException;
@@ -105,9 +105,9 @@ public class GraphBean implements Serializable {
         return graph;
     }
 
-    public Map<Edge, List<Coordinates>> getCoordinates( Set<Edge> edges ) throws IOException {
+    public Map<Edge, List<Coordinate>> getCoordinates( Set<Edge> edges ) throws IOException {
         getCoordinateReader().open();
-        Map<Edge, List<Coordinates>> edgeMap = getCoordinateReader().read( edges );
+        Map<Edge, List<Coordinate>> edgeMap = getCoordinateReader().read( edges );
         getCoordinateReader().close();
         return edgeMap;
     }
@@ -157,7 +157,7 @@ public class GraphBean implements Serializable {
         return coordinateReader;
     }
 
-    public Pair<Map<Node.Id, Distance>, Long> getClosestNodes( Coordinates coords, NodeSearcher.SearchFor searchFor, Priority priority ) throws IOException {
+    public Pair<Map<Node.Id, Distance>, Long> getClosestNodes( Coordinate coords, NodeSearcher.SearchFor searchFor, Priority priority ) throws IOException {
         if ( nodeSearcher == null ) {
             nodeSearcher = new SqliteNodeSearcher( databasePropertiesBean.getProperties() );
             //new GraphNodeSearcher( getGraph() );

@@ -5,7 +5,7 @@
  */
 package cz.certicon.routing.web.data.logging.report;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.io.IOException;
 public class FakeReportLogger implements ReportLogger {
 
     @Override
-    public void log( Coordinates from, Coordinates to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
         // do nothing
     }
     

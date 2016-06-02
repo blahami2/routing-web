@@ -5,7 +5,7 @@
  */
 package cz.certicon.routing.web.model.transport;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import java.util.List;
 
 /**
@@ -16,13 +16,13 @@ public class RoutingOutput {
 
     private final double time;
     private final double length;
-    private final List<Coordinates> coordinates;
+    private final List<Coordinate> coordinates;
 
     private final long searchTime;
     private final long routeTime;
     private final long coordinatesTime;
 
-    public RoutingOutput( double time, double length, List<Coordinates> coordinates, long searchTime, long routeTime, long coordinatesTime ) {
+    public RoutingOutput( double time, double length, List<Coordinate> coordinates, long searchTime, long routeTime, long coordinatesTime ) {
         this.time = time;
         this.length = length;
         this.coordinates = coordinates;
@@ -39,7 +39,7 @@ public class RoutingOutput {
         return length;
     }
 
-    public List<Coordinates> getCoordinates() {
+    public List<Coordinate> getCoordinates() {
         return coordinates;
     }
 

@@ -5,7 +5,7 @@
  */
 package cz.certicon.routing.web.data.logging.report;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
 import java.io.IOException;
@@ -16,11 +16,11 @@ import java.io.IOException;
  */
 public interface ReportLogger {
 
-    public void log( Coordinates from, Coordinates to, AlgorithmType algorithm, Priority priority, String message ) throws IOException;
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, Priority priority, String message ) throws IOException;
 
     public static class Formatter {
 
-        public static String formatCoordinates( Coordinates coords ) {
+        public static String formatCoordinates( Coordinate coords ) {
             return coords.getLatitude() + "," + coords.getLongitude();
         }
     }

@@ -11,7 +11,8 @@ import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
 import cz.certicon.routing.application.algorithm.algorithms.astar.StraightLineAStarRoutingAlgorithm;
 import cz.certicon.routing.data.nodesearch.NodeSearcher;
 import cz.certicon.routing.model.basic.Pair;
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.basic.TimeUnits;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.model.entity.Edge;
 import cz.certicon.routing.model.entity.Node;
 import cz.certicon.routing.model.entity.Path;
@@ -20,7 +21,6 @@ import cz.certicon.routing.utils.GeometryUtils;
 import cz.certicon.routing.utils.GraphUtils;
 import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
-import cz.certicon.routing.utils.measuring.TimeUnits;
 import cz.certicon.routing.web.model.transport.RoutingOutput;
 import cz.certicon.routing.web.model.AlgorithmType;
 import cz.certicon.routing.web.model.Priority;
@@ -241,8 +241,8 @@ try {
             } catch ( IllegalArgumentException ex ) {
                 algorithmType = AlgorithmType.CONTRACTION_HIERARCHIES;
             }
-            Coordinates from = new Coordinates( latFrom, lonFrom );
-            Coordinates to = new Coordinates( latTo, lonTo );
+            Coordinate from = new Coordinate( latFrom, lonFrom );
+            Coordinate to = new Coordinate( latTo, lonTo );
 
             DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss dd.MM.yyyy " );
             Calendar cal = Calendar.getInstance();
@@ -250,8 +250,10 @@ try {
             System.out.println( dateFormat.format( cal.getTime() ) + " - new request" );
             Log.dln( FILENAME, "=== log ===" );
             Log.dln( FILENAME, dateFormat.format( cal.getTime() ) );
-            Log.dln( FILENAME, "from: " + from );
-            Log.dln( FILENAME, "to: " + to );
+            Log.dln( FILENAME, "source: " + from );
+            Log.dln( FILENAME, "target: " + to );
+            Log.dln( FILENAME, "priority: " + priorityType.name().toLowerCase() );
+            Log.dln( FILENAME, "algorithm: " + algorithmType.name().toLowerCase() );
 
             TimeMeasurement time = new TimeMeasurement();
             time.setTimeUnits( TimeUnits.MILLISECONDS );

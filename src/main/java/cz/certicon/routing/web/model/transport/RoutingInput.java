@@ -5,26 +5,27 @@
  */
 package cz.certicon.routing.web.model.transport;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
+
 
 /**
  *
  * @author Michael Blaha {@literal <michael.blaha@certicon.cz>}
  */
 public class RoutingInput {
-    private final Coordinates from;
-    private final Coordinates to;
+    private final Coordinate from;
+    private final Coordinate to;
 
-    public RoutingInput( Coordinates from, Coordinates to ) {
+    public RoutingInput( Coordinate from, Coordinate to ) {
         this.from = from;
         this.to = to;
     }
 
-    public Coordinates getFrom() {
+    public Coordinate getFrom() {
         return from;
     }
 
-    public Coordinates getTo() {
+    public Coordinate getTo() {
         return to;
     }
 }

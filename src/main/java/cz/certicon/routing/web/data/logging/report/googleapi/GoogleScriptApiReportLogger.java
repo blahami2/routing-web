@@ -8,7 +8,7 @@ package cz.certicon.routing.web.data.logging.report.googleapi;
 import com.google.api.services.script.model.ExecutionRequest;
 import com.google.api.services.script.model.Operation;
 import cz.certicon.routing.data.basic.FileSource;
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.web.data.basic.google.GoogleScriptConnector;
 import cz.certicon.routing.web.data.logging.report.ReportLogger;
 import cz.certicon.routing.web.model.AlgorithmType;
@@ -39,7 +39,7 @@ public class GoogleScriptApiReportLogger implements ReportLogger {
     }
 
     @Override
-    public void log( Coordinates from, Coordinates to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
         ExecutionRequest request = new ExecutionRequest()
                 .setFunction( "report" )
                 .setParameters( Arrays.asList( Formatter.formatCoordinates( from ), Formatter.formatCoordinates( to ),

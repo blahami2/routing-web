@@ -5,7 +5,7 @@
  */
 package cz.certicon.routing.web.data.logging.report.file;
 
-import cz.certicon.routing.model.entity.Coordinates;
+import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.web.data.logging.report.ReportLogger;
 import cz.certicon.routing.web.model.AlgorithmType;
@@ -24,12 +24,12 @@ public class FileReportLogger implements ReportLogger {
     private static final String FILENAME = "report";
 
     @Override
-    public void log( Coordinates from, Coordinates to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, Priority priority, String message ) throws IOException {
         Log.dln( FILENAME, "=== log ===" );
         DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss dd.MM.yyyy" );
         Log.dln( FILENAME, dateFormat.format( Calendar.getInstance().getTime() ) );
-        Log.dln( FILENAME, "source:" + Formatter.formatCoordinates( from ) );
-        Log.dln( FILENAME, "target:" + Formatter.formatCoordinates( to ) );
+        Log.dln( FILENAME, "source: " + Formatter.formatCoordinates( from ) );
+        Log.dln( FILENAME, "target: " + Formatter.formatCoordinates( to ) );
         Log.dln( FILENAME, "priority: " + priority.name().toLowerCase() );
         Log.dln( FILENAME, "algorithm: " + algorithm.name().toLowerCase() );
         Log.dln( FILENAME, "message: " + message );
