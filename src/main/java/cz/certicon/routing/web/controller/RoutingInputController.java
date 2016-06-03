@@ -10,30 +10,24 @@ import cz.certicon.routing.application.algorithm.AlgorithmType;
 import cz.certicon.routing.memsensitive.algorithm.Route;
 import cz.certicon.routing.memsensitive.algorithm.RouteNotFoundException;
 import cz.certicon.routing.memsensitive.data.nodesearch.EvaluableOnlyException;
-import cz.certicon.routing.memsensitive.data.nodesearch.NodeSearcher;
 import cz.certicon.routing.memsensitive.model.entity.DistanceType;
 import cz.certicon.routing.memsensitive.model.entity.NodeSet;
 import cz.certicon.routing.memsensitive.model.entity.Path;
-import cz.certicon.routing.memsensitive.model.entity.common.SimpleNodeSetBuilderFactory;
 import cz.certicon.routing.model.basic.LengthUnits;
 import cz.certicon.routing.model.basic.Time;
 import cz.certicon.routing.model.basic.TimeUnits;
 import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.utils.debug.Log;
+import cz.certicon.routing.utils.measuring.StatsLogger;
 import cz.certicon.routing.utils.measuring.TimeLogger;
-import cz.certicon.routing.utils.measuring.TimeMeasurement;
 import cz.certicon.routing.web.model.transport.RoutingOutput;
-import cz.certicon.routing.web.model.beans.PropertiesBean;
 import cz.certicon.routing.web.model.beans.GraphBean;
-import cz.certicon.routing.web.model.beans.GraphFactoriesBean;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jfree.chart.axis.Tick;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -101,6 +95,8 @@ public class RoutingInputController {
                     route = graphBean.getRoute( distanceType, algorithmType,
                             nodeSet.getMap( graphBean.getGraph( distanceType ), NodeSet.NodeCategory.SOURCE ),
                             nodeSet.getMap( graphBean.getGraph( distanceType ), NodeSet.NodeCategory.TARGET ) );
+                    Log.dln( FILENAME, "#nodes: " + StatsLogger.getValue( StatsLogger.Statistic.NODES_EXAMINED ) );
+                    System.out.println( "Examined nodes: " + StatsLogger.getValue( StatsLogger.Statistic.NODES_EXAMINED ) );
                     Time routingTime = TimeLogger.getTimeMeasurement( TimeLogger.Event.ROUTING ).getTime();
                     Log.dln( FILENAME, "routing: " + routingTime.toString( TimeUnits.MICROSECONDS ) );
                     System.out.println( "Routing done in " + routingTime.toString( TimeUnits.MICROSECONDS ) + "! Printing result..." );
@@ -129,13 +125,15 @@ public class RoutingInputController {
             Time nodeSearchTime = TimeLogger.getTimeMeasurement( TimeLogger.Event.NODE_SEARCHING ).getTime();
             Time routingTime = TimeLogger.getTimeMeasurement( TimeLogger.Event.ROUTING ).getTime();
             Time pathTime = TimeLogger.getTimeMeasurement( TimeLogger.Event.PATH_LOADING ).getTime();
+            int nodesExamined = StatsLogger.getValue( StatsLogger.Statistic.NODES_EXAMINED );
             RoutingOutput output = new RoutingOutput(
                     path.getTime().getTime( TimeUnits.SECONDS ),
                     path.getLength().getLength( LengthUnits.METERS ),
                     path.getCoordinates(),
                     nodeSearchTime.getTime( TimeUnits.MILLISECONDS ),
                     routingTime.getTime( TimeUnits.MILLISECONDS ),
-                    pathTime.getTime( TimeUnits.MILLISECONDS )
+                    pathTime.getTime( TimeUnits.MILLISECONDS ),
+                    nodesExamined
             );
             return output;
 

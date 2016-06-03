@@ -65,6 +65,7 @@
                                     document.getElementById('time_nodesearch').value = data.searchTime;
                                     document.getElementById('time_routing').value = data.routeTime;
                                     document.getElementById('time_coordinates').value = data.coordinatesTime;
+                                    document.getElementById('stats_nodes').value = data.nodesExamined;
                                     var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
                                     layer.addGeometry(g);
                                     var cz = m.computeCenterZoom(coords, true);
@@ -84,6 +85,7 @@
                                     document.getElementById('time_nodesearch').value = "";
                                     document.getElementById('time_routing').value = "";
                                     document.getElementById('time_coordinates').value = "";
+                                    document.getElementById('stats_nodes').value = "";
                                 }
                         );
                 //console.log("doing some stuff");
@@ -184,6 +186,8 @@
                 <input id="time_routing" type="text" name="time_routing"/>
                 <label for="time_coordinates">Loading coordinates[ms]:</label>
                 <input id="time_coordinates" type="text" name="time_coordinates"/>
+                <label for="stats_nodes">Examined nodes[#]:</label>
+                <input id="stats_nodes" type="text" name="stats_nodes"/>
             </fieldset>
             <fieldset>
                 <legend>Report</legend>
