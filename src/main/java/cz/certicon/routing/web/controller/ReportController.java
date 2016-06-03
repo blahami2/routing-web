@@ -5,21 +5,15 @@
  */
 package cz.certicon.routing.web.controller;
 
+import cz.certicon.routing.application.algorithm.AlgorithmType;
+import cz.certicon.routing.memsensitive.model.entity.DistanceType;
 import cz.certicon.routing.model.entity.Coordinate;
-import cz.certicon.routing.utils.debug.Log;
 import cz.certicon.routing.web.data.logging.report.FakeReportLogger;
 import cz.certicon.routing.web.data.logging.report.ReportLogger;
 import cz.certicon.routing.web.data.logging.report.file.FileReportLogger;
 import cz.certicon.routing.web.data.logging.report.googleapi.GoogleScriptApiReportLogger;
-import cz.certicon.routing.web.model.AlgorithmType;
-import cz.certicon.routing.web.model.Priority;
 import cz.certicon.routing.web.model.beans.PropertiesBean;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.ScriptEngine;
@@ -76,11 +70,11 @@ public class ReportController {
 //        Log.dln( FILENAME, dateFormat.format( Calendar.getInstance().getTime() ) );
         Coordinate from = new Coordinate( latFrom, lonFrom );
         Coordinate to = new Coordinate( latTo, lonTo );
-        Priority priorityType;
+        DistanceType priorityType;
         try {
-            priorityType = Priority.valueOfCaseInsensitive( priorityString );
+            priorityType = DistanceType.valueOf( priorityString.toUpperCase() );
         } catch ( IllegalArgumentException ex ) {
-            priorityType = Priority.LENGTH;
+            priorityType = DistanceType.LENGTH;
         }
         AlgorithmType algorithmType;
         try {

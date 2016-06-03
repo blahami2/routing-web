@@ -5,42 +5,44 @@
  */
 package cz.certicon.routing.web.model.beans;
 
-import cz.certicon.routing.application.algorithm.Distance;
-import cz.certicon.routing.application.algorithm.DistanceFactory;
-import cz.certicon.routing.application.algorithm.RoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.algorithms.astar.StraightLineAStarRoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.algorithms.ch.OptimizedContractionHierarchiesRoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.algorithms.dijkstra.DijkstraRoutingAlgorithm;
-import cz.certicon.routing.application.algorithm.data.number.LengthDistanceFactory;
-import cz.certicon.routing.application.algorithm.data.number.TimeDistanceFactory;
-import cz.certicon.routing.data.DistanceType;
-import cz.certicon.routing.data.ch.ContractionHierarchiesDataRW;
-import cz.certicon.routing.data.ch.sqlite.SqliteContractionHierarchiesDataRW;
-import cz.certicon.routing.data.coordinates.CoordinateReader;
-import cz.certicon.routing.data.coordinates.sqlite.SqliteCoordinateRW;
-import cz.certicon.routing.data.graph.GraphReader;
-import cz.certicon.routing.data.graph.sqlite.SqliteGraphRW;
-import cz.certicon.routing.data.nodesearch.NodeSearcher;
-import cz.certicon.routing.data.nodesearch.sqlite.SqliteNodeSearcher;
-import cz.certicon.routing.model.basic.Pair;
+import cz.certicon.routing.application.algorithm.AlgorithmType;
+import cz.certicon.routing.memsensitive.algorithm.Route;
+import cz.certicon.routing.memsensitive.algorithm.RouteBuilder;
+import cz.certicon.routing.memsensitive.algorithm.RouteNotFoundException;
+import cz.certicon.routing.memsensitive.algorithm.RoutingAlgorithm;
+import cz.certicon.routing.memsensitive.algorithm.algorithms.AstarRoutingAlgorithm;
+import cz.certicon.routing.memsensitive.algorithm.algorithms.ContractionHierarchiesRoutingAlgorithm;
+import cz.certicon.routing.memsensitive.algorithm.algorithms.ContractionHierarchiesUbRoutingAlgorithm;
+import cz.certicon.routing.memsensitive.algorithm.algorithms.DijkstraRoutingAlgorithm;
+import cz.certicon.routing.memsensitive.algorithm.common.SimpleRouteBuilder;
+import cz.certicon.routing.memsensitive.data.ch.ContractionHierarchiesDataRW;
+import cz.certicon.routing.memsensitive.data.ch.NotPreprocessedException;
+import cz.certicon.routing.memsensitive.data.ch.sqlite.SqliteContractionHierarchiesRW;
+import cz.certicon.routing.memsensitive.data.graph.GraphReader;
+import cz.certicon.routing.memsensitive.data.graph.sqlite.SqliteGraphReader;
+import cz.certicon.routing.memsensitive.data.nodesearch.EvaluableOnlyException;
+import cz.certicon.routing.memsensitive.data.nodesearch.NodeSearcher;
+import cz.certicon.routing.memsensitive.data.nodesearch.sqlite.SqliteNodeSearcher;
+import cz.certicon.routing.memsensitive.data.path.PathReader;
+import cz.certicon.routing.memsensitive.data.path.sqlite.SqlitePathReader;
+import cz.certicon.routing.memsensitive.model.entity.DistanceType;
+import cz.certicon.routing.memsensitive.model.entity.Graph;
+import cz.certicon.routing.memsensitive.model.entity.NodeSet;
+import cz.certicon.routing.memsensitive.model.entity.Path;
+import cz.certicon.routing.memsensitive.model.entity.PathBuilder;
+import cz.certicon.routing.memsensitive.model.entity.ch.PreprocessedData;
+import cz.certicon.routing.memsensitive.model.entity.ch.SimpleChDataFactory;
+import cz.certicon.routing.memsensitive.model.entity.common.SimpleGraphBuilderFactory;
+import cz.certicon.routing.memsensitive.model.entity.common.SimpleNodeSetBuilderFactory;
+import cz.certicon.routing.memsensitive.model.entity.common.SimplePathBuilder;
 import cz.certicon.routing.model.basic.TimeUnits;
-import cz.certicon.routing.model.basic.Trinity;
 import cz.certicon.routing.model.entity.Coordinate;
-import cz.certicon.routing.model.entity.Edge;
-import cz.certicon.routing.model.entity.Graph;
-import cz.certicon.routing.model.entity.GraphEntityFactory;
-import cz.certicon.routing.model.entity.Node;
-import cz.certicon.routing.model.entity.Shortcut;
-import cz.certicon.routing.model.entity.neighbourlist.NeighborListGraphEntityFactory;
+import cz.certicon.routing.model.entity.NodeSetBuilderFactory;
 import cz.certicon.routing.utils.measuring.TimeMeasurement;
-import cz.certicon.routing.web.model.AlgorithmType;
-import cz.certicon.routing.web.model.Priority;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -53,115 +55,136 @@ import org.springframework.stereotype.Component;
 @Scope( "singleton" )
 public class GraphBean implements Serializable {
 
-    private CoordinateReader coordinateReader;
-    private NodeSearcher nodeSearcher;
-    private GraphEntityFactory graphEntityFactory;
-
-    private final Map<Priority, Graph> graphs;
-    private final Map<Pair<Priority, AlgorithmType>, RoutingAlgorithm> algorithms;
-    private final Map<Priority, DistanceFactory> distanceFactories;
+    public NodeSearcher nodeSearcher;
+    public final RouteBuilder<Route, Graph> routeBuilder;
+    public final PathBuilder<Path, Graph> pathBuilder;
+    public PathReader<Graph> pathReader;
+    public final Map<DistanceType, GraphData> graphDataMap;
 
     @Autowired
     private PropertiesBean databasePropertiesBean;
 
     public GraphBean() {
-        this.graphEntityFactory = new NeighborListGraphEntityFactory();
-        this.graphs = new HashMap<>();
-        this.algorithms = new HashMap<>();
-        this.distanceFactories = new HashMap<>();
+        this.routeBuilder = new SimpleRouteBuilder();
+        this.pathBuilder = new SimplePathBuilder();
+        this.graphDataMap = new HashMap<>();
     }
 
-    private DistanceFactory getDistanceFactory( Priority priority ) {
-        DistanceFactory distanceFactory = distanceFactories.get( priority );
-        if ( distanceFactory == null ) {
-            switch ( priority ) {
-                case LENGTH:
-                    distanceFactory = new LengthDistanceFactory();
-                    break;
-                case TIME:
-                    distanceFactory = new TimeDistanceFactory();
-                    break;
-                default:
-                    throw new AssertionError( "Unknown priority: " + priority.name() );
-            }
-            distanceFactories.put( priority, distanceFactory );
-        }
-        return distanceFactory;
+    public Graph getGraph( DistanceType distanceType ) throws IOException {
+        return getGraphData( distanceType ).getGraph();
     }
 
-    public Graph getGraph( Priority priority ) throws IOException {
-        Graph graph = graphs.get( priority );
-        if ( graph == null ) {
-            System.out.println( "Reading..." );
-            TimeMeasurement time = new TimeMeasurement();
-            time.setTimeUnits( TimeUnits.MILLISECONDS );
-            time.start();
-            GraphReader graphReader = new SqliteGraphRW( databasePropertiesBean.getProperties() );
-            graph = graphReader.read( new Pair<>( graphEntityFactory, getDistanceFactory( priority ) ) );
-            graphReader.close();
-            System.out.println( "Done reading in " + time.getTimeString() );
-            graphs.put( priority, graph );
-        }
-        return graph;
-    }
-
-    public Map<Edge, List<Coordinate>> getCoordinates( Set<Edge> edges ) throws IOException {
-        getCoordinateReader().open();
-        Map<Edge, List<Coordinate>> edgeMap = getCoordinateReader().read( edges );
-        getCoordinateReader().close();
-        return edgeMap;
-    }
-
-    public RoutingAlgorithm getRoutingAlgorithm( Priority priority, AlgorithmType algorithm ) throws IOException {
-        RoutingAlgorithm routingAlgorithm = algorithms.get( new Pair<>( priority, algorithm ) );
+    public RoutingAlgorithm getRoutingAlgorithm( DistanceType distanceType, AlgorithmType algorithm ) throws IOException {
+        RoutingAlgorithm routingAlgorithm = getGraphData( distanceType ).getAlgorithm( algorithm );
         if ( routingAlgorithm == null ) {
-            Graph g = getGraph( priority );
+            Graph g = getGraphData( distanceType ).getGraph();
             switch ( algorithm ) {
                 case ASTAR:
-                    routingAlgorithm = new StraightLineAStarRoutingAlgorithm( g, graphEntityFactory, getDistanceFactory( priority ) );
+                    routingAlgorithm = new AstarRoutingAlgorithm( g, distanceType );
                     break;
                 case DIJKSTRA:
-                    routingAlgorithm = new DijkstraRoutingAlgorithm( g, graphEntityFactory, getDistanceFactory( priority ) );
+                    routingAlgorithm = new DijkstraRoutingAlgorithm( g );
                     break;
                 case CONTRACTION_HIERARCHIES:
-                    ContractionHierarchiesDataRW preprocessedDataAccess = new SqliteContractionHierarchiesDataRW( databasePropertiesBean.getProperties() );
-                    DistanceType dt;
-                    switch ( priority ) {
-                        case LENGTH:
-                            dt = DistanceType.LENGTH;
-                            break;
-                        case TIME:
-                            dt = DistanceType.TIME;
-                            break;
-                        default:
-                            throw new AssertionError( "Unknown priority: " + priority.name() );
-                    }
-                    Trinity<Map<Node.Id, Integer>, List<Shortcut>, DistanceType> preprocessedData = preprocessedDataAccess.read( new Trinity<>( g, graphEntityFactory, dt ) );
-                    routingAlgorithm = new OptimizedContractionHierarchiesRoutingAlgorithm( g, graphEntityFactory, getDistanceFactory( priority ), preprocessedData.b, preprocessedData.a );
-                    preprocessedDataAccess.close();
+                    routingAlgorithm = new ContractionHierarchiesRoutingAlgorithm( g, getGraphData( distanceType ).getPreprocessedData() );
+                    break;
+                case CONTRACTION_HIERARCHIES_UB:
+                    routingAlgorithm = new ContractionHierarchiesUbRoutingAlgorithm( g, getGraphData( distanceType ).getPreprocessedData() );
                     break;
                 default:
                     throw new AssertionError( "Unknown algorithm: " + algorithm.name() );
             }
-            algorithms.put( new Pair<>( priority, algorithm ), routingAlgorithm );
+            getGraphData( distanceType ).putAlgorithm( algorithm, routingAlgorithm );
         }
         return routingAlgorithm;
     }
 
-    public CoordinateReader getCoordinateReader() {
-        if ( coordinateReader == null ) {
-            coordinateReader = new SqliteCoordinateRW( databasePropertiesBean.getProperties() );
-            //new XmlCoordinateReader( new FileSource( new File( Settings.COORDINATES_FILE_PATH ) ) );
-            //new DatabaseCoordinatesRW( databasePropertiesBean.getConnectionProperties() );
-        }
-        return coordinateReader;
+    public Route getRoute( DistanceType distanceType, AlgorithmType algorithm, Map<Integer, Float> from, Map<Integer, Float> to ) throws IOException, RouteNotFoundException {
+        RoutingAlgorithm<Graph> alg = getRoutingAlgorithm( distanceType, algorithm );
+        Route route = alg.route( routeBuilder, from, to );
+        return route;
     }
 
-    public Pair<Map<Node.Id, Distance>, Long> getClosestNodes( Coordinate coords, NodeSearcher.SearchFor searchFor, Priority priority ) throws IOException {
+    public Path getPath( DistanceType distanceType, Route route, Coordinate source, Coordinate target ) throws IOException {
+        if ( pathReader == null ) {
+            pathReader = new SqlitePathReader( databasePropertiesBean.getProperties() );
+        }
+        return pathReader.readPath( pathBuilder, getGraphData( distanceType ).getGraph(), route, source, target );
+    }
+
+    public Path getPath( DistanceType distanceType, long edgeId, Coordinate source, Coordinate target ) throws IOException {
+        if ( pathReader == null ) {
+            pathReader = new SqlitePathReader( databasePropertiesBean.getProperties() );
+        }
+        return pathReader.readPath( pathBuilder, getGraphData( distanceType ).getGraph(), edgeId, source, target );
+    }
+
+    public NodeSet getClosestNodes( DistanceType distanceType, Coordinate source, Coordinate target ) throws IOException, EvaluableOnlyException {
         if ( nodeSearcher == null ) {
             nodeSearcher = new SqliteNodeSearcher( databasePropertiesBean.getProperties() );
-            //new GraphNodeSearcher( getGraph() );
         }
-        return nodeSearcher.findClosestNodes( coords, getDistanceFactory( priority ), searchFor );
+        return nodeSearcher.findClosestNodes( getGraphData( distanceType ).nodeSetFactory, source, target );
+    }
+
+    public GraphData getGraphData( DistanceType distanceType ) throws IOException {
+        GraphData gd = graphDataMap.get( distanceType );
+        if ( gd == null ) {
+            System.out.println( "Reading graph..." );
+            TimeMeasurement time = new TimeMeasurement();
+            time.setTimeUnits( TimeUnits.MILLISECONDS );
+            time.start();
+            GraphReader graphReader = new SqliteGraphReader( databasePropertiesBean.getProperties() );
+            Graph graph = graphReader.readGraph( new SimpleGraphBuilderFactory( distanceType ), distanceType );
+            System.out.println( "Done reading graph in " + time.getCurrentTimeString() );
+            System.out.println( "Reading preprocessed data..." );
+            time.start();
+            NodeSetBuilderFactory<NodeSet<Graph>> nodeSetFactory = new SimpleNodeSetBuilderFactory( graph, distanceType );
+            ContractionHierarchiesDataRW chDataRw = new SqliteContractionHierarchiesRW( databasePropertiesBean.getProperties() );
+            PreprocessedData preprocessedData;
+            try {
+                preprocessedData = chDataRw.read( new SimpleChDataFactory( graph, distanceType ) );
+                System.out.println( "Done reading preprocessed data in " + time.getCurrentTimeString() );
+            } catch ( NotPreprocessedException ex ) {
+                throw new IOException( ex );
+            }
+            gd = new GraphData( graph, nodeSetFactory, preprocessedData );
+            graphDataMap.put( distanceType, gd );
+        }
+        return gd;
+    }
+
+    public static class GraphData {
+
+        private final Graph graph;
+        private final NodeSetBuilderFactory<NodeSet<Graph>> nodeSetFactory;
+        private final PreprocessedData preprocessedData;
+        private final Map<AlgorithmType, RoutingAlgorithm<Graph>> algorithmMap;
+
+        public GraphData( Graph graph, NodeSetBuilderFactory<NodeSet<Graph>> nodeSetFactory, PreprocessedData preprocessedData ) {
+            this.graph = graph;
+            this.nodeSetFactory = nodeSetFactory;
+            this.preprocessedData = preprocessedData;
+            this.algorithmMap = new HashMap<>();
+        }
+
+        public Graph getGraph() {
+            return graph;
+        }
+
+        public NodeSetBuilderFactory<NodeSet<Graph>> getNodeSetFactory() {
+            return nodeSetFactory;
+        }
+
+        public PreprocessedData getPreprocessedData() {
+            return preprocessedData;
+        }
+
+        public RoutingAlgorithm<Graph> getAlgorithm( AlgorithmType algorithmType ) {
+            return algorithmMap.get( algorithmType );
+        }
+
+        public void putAlgorithm( AlgorithmType algorithmType, RoutingAlgorithm<Graph> routingAlgorithm ) {
+            algorithmMap.put( algorithmType, routingAlgorithm );
+        }
     }
 }

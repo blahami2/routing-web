@@ -5,9 +5,9 @@
  */
 package cz.certicon.routing.web.data.logging.query;
 
+import cz.certicon.routing.application.algorithm.AlgorithmType;
+import cz.certicon.routing.memsensitive.model.entity.DistanceType;
 import cz.certicon.routing.model.entity.Coordinate;
-import cz.certicon.routing.web.model.AlgorithmType;
-import cz.certicon.routing.web.model.Priority;
 
 /**
  *
@@ -15,5 +15,5 @@ import cz.certicon.routing.web.model.Priority;
  */
 public interface QueryLogger {
 
-    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, Priority priority, long searchTime, long routingTime, long pathBuildTime, long coordinatesLoadTime, double routeLength, double routeTime );
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, long searchTime, long routingTime, long pathBuildTime, long coordinatesLoadTime, double routeLength, double routeTime );
 }
