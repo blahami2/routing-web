@@ -16,7 +16,7 @@ import java.io.IOException;
  */
 public interface ReportLogger {
 
-    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message ) throws IOException;
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message, String link ) throws IOException;
 
     public static class Formatter {
 

@@ -207,7 +207,7 @@
         <div id="static_panel" style="float: left;">
             <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports spreadsheet</a>
         </div>
-        <script type="text/javascript">
+        <script th:inline="javascript">
             /*<![CDATA[*/
             $(document).ready(function () {
                 var first = true;
@@ -249,6 +249,24 @@
                     }
                 }
                 m.getSignals().addListener(window, "map-click", click);
+
+                var getUrlParameter = function getUrlParameter(sParam) {
+                    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                            sURLVariables = sPageURL.split('&'),
+                            sParameterName,
+                            i;
+
+                    for (i = 0; i < sURLVariables.length; i++) {
+                        sParameterName = sURLVariables[i].split('=');
+
+                        if (sParameterName[0] === sParam) {
+                            return sParameterName[1] === undefined ? true : sParameterName[1];
+                        }
+                    }
+                };
+                if(getUrlParameter('route') === 'true'){
+                    route();
+                }
             });
             /*]]>*/
         </script>

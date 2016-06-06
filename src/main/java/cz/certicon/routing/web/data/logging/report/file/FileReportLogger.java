@@ -24,7 +24,7 @@ public class FileReportLogger implements ReportLogger {
     private static final String FILENAME = "report";
 
     @Override
-    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message ) throws IOException {
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message, String link ) throws IOException {
         Log.dln( FILENAME, "=== log ===" );
         DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss dd.MM.yyyy" );
         Log.dln( FILENAME, dateFormat.format( Calendar.getInstance().getTime() ) );
@@ -33,6 +33,7 @@ public class FileReportLogger implements ReportLogger {
         Log.dln( FILENAME, "priority: " + priority.name().toLowerCase() );
         Log.dln( FILENAME, "algorithm: " + algorithm.name().toLowerCase() );
         Log.dln( FILENAME, "message: " + message );
+        Log.dln( FILENAME, "link: " + link );
     }
 
 }

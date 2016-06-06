@@ -53,10 +53,10 @@ public class MapController {
     public ModelAndView mapView() {
         ModelAndView modelAndView = new ModelAndView( "mapview" );
         modelAndView.addObject( "url", propertiesBean.getProperties().getProperty( "route_service_url" ) );
-        modelAndView.addObject( "latFrom", "14.3296708" );
-        modelAndView.addObject( "lonFrom", "50.0430858" );
-        modelAndView.addObject( "latTo", "14.5171250" );
-        modelAndView.addObject( "lonTo", "50.1190931" );
+        modelAndView.addObject( "latFrom", "14.5131146" );
+        modelAndView.addObject( "lonFrom", "50.1032571" );
+        modelAndView.addObject( "latTo", "14.3638555" );
+        modelAndView.addObject( "lonTo", "50.0526668" );
         modelAndView.addObject( "prioritySelected", DistanceType.LENGTH.name() );
         List<Pair<String, String>> priorities = new ArrayList<>();
         for ( DistanceType allowedMetric : Provider.getAllowedMetrics() ) {

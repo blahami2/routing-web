@@ -57,8 +57,8 @@ public class ReportController {
             @RequestParam( value = "lonFrom" ) double lonFrom,
             @RequestParam( value = "latTo" ) double latTo,
             @RequestParam( value = "lonTo" ) double lonTo,
-            @RequestParam( value = "priority" ) String priorityString,
-            @RequestParam( value = "algorithm" ) String algorithmString,
+            @RequestParam( value = "priority" ) String priority,
+            @RequestParam( value = "algorithm" ) String algorithm,
             @RequestParam( value = "message" ) String message ) {
 
         if ( primaryReportLogger == null || secondaryReportLogger == null ) {
@@ -72,13 +72,13 @@ public class ReportController {
         Coordinate to = new Coordinate( latTo, lonTo );
         DistanceType priorityType;
         try {
-            priorityType = DistanceType.valueOf( priorityString.toUpperCase() );
+            priorityType = DistanceType.valueOf( priority.toUpperCase() );
         } catch ( IllegalArgumentException ex ) {
             priorityType = DistanceType.LENGTH;
         }
         AlgorithmType algorithmType;
         try {
-            algorithmType = AlgorithmType.valueOf( algorithmString );
+            algorithmType = AlgorithmType.valueOf( algorithm );
         } catch ( IllegalArgumentException ex ) {
             algorithmType = AlgorithmType.DIJKSTRA;
         }
@@ -91,17 +91,20 @@ public class ReportController {
             decodedMessage = message;
         }
 
+        String link = propertiesBean.getProperties().getProperty( "route_service_url" ) + "map?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm + "&route=true";
+
         try {
-            primaryReportLogger.log( from, to, algorithmType, priorityType, decodedMessage );
-            secondaryReportLogger.log( from, to, algorithmType, priorityType, decodedMessage );
+            primaryReportLogger.log( from, to, algorithmType, priorityType, decodedMessage, link );
+            secondaryReportLogger.log( from, to, algorithmType, priorityType, decodedMessage, link );
         } catch ( IOException ex ) {
             Logger.getLogger( ReportController.class.getName() ).log( Level.SEVERE, null, ex );
-            return new Result("FAIL");                    
+            return new Result( "FAIL" );
         }
-        return new Result("OK");
+        return new Result( "OK" );
     }
-    
+
     public static class Result {
+
         private final String result;
 
         public Result( String result ) {

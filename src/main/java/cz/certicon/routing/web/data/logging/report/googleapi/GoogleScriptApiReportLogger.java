@@ -39,11 +39,11 @@ public class GoogleScriptApiReportLogger implements ReportLogger {
     }
 
     @Override
-    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message ) throws IOException {
+    public void log( Coordinate from, Coordinate to, AlgorithmType algorithm, DistanceType priority, String message, String link ) throws IOException {
         ExecutionRequest request = new ExecutionRequest()
                 .setFunction( "report" )
                 .setParameters( Arrays.asList( Formatter.formatCoordinates( from ), Formatter.formatCoordinates( to ),
-                        algorithm.name().toLowerCase(), priority.name().toLowerCase(), message ) )
+                        algorithm.name().toLowerCase(), priority.name().toLowerCase(), message, "=HYPERLINK(\"" + link +"\";\"display route on map\")"  ) )
                 .setDevMode( true );
         Operation op = googleScriptConnector.runScript( scriptId, request );
         op.getResponse().get( "result" );
