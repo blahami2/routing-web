@@ -37,7 +37,9 @@
                 latTo = document.getElementById('toLat').value;
                 lonTo = document.getElementById('toLon').value;
                 priority = $("input[name=priority]:checked").val();
-                algorithm = $("input[name=algorithm]:checked").val();
+                var algCombobox = document.getElementById('algorithm');
+                algorithm = algCombobox.options[algCombobox.selectedIndex].value;
+                message = document.getElementById('message').value;
                 layer.removeAll();
                 marksLayer.removeAll();
                 requestString = document.getElementById('url').value + "rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm;
@@ -99,7 +101,8 @@
                 latTo = document.getElementById('toLat').value;
                 lonTo = document.getElementById('toLon').value;
                 priority = $("input[name=priority]:checked").val();
-                algorithm = $("input[name=algorithm]:checked").val();
+                var algCombobox = document.getElementById('algorithm');
+                algorithm = algCombobox.options[algCombobox.selectedIndex].value;
                 message = document.getElementById('message').value;
                 requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm + "&message=" + encodeURIComponent(message);
                 console.log(requestString);
@@ -137,30 +140,35 @@
                     <fieldset>
                         <legend>From</legend>
                         <label for="longitude">longitude:</label>
-                        <input id="fromLon" type="text" name="longitude" value="14.3566567"/>
+                        <input id="fromLon" type="text" name="longitude" th:value="${lonFrom}" />
                         <label for="latitude">latitude:</label>
-                        <input id="fromLat" type="text" name="latitude" value="50.0856206"/>
+                        <input id="fromLat" type="text" name="latitude" th:value="${latFrom}" />
                     </fieldset>
                     <fieldset>
                         <legend>To</legend>
                         <label for="longitude">longitude:</label>
-                        <input id="toLon" type="text" name="longitude" value="14.5369011"/>
+                        <input id="toLon" type="text" name="longitude" th:value="${lonTo}" />
                         <label for="latitude">latitude:</label>
-                        <input id="toLat" type="text" name="latitude" value="50.0757064"/>
+                        <input id="toLat" type="text" name="latitude" th:value="${latTo}" />
                     </fieldset>
                 </fieldset>
                 <fieldset>
                     <legend>Options</legend>
                     <fieldset>
                         <legend>Priority</legend>
-                        <input type="radio" name="priority" value="length" checked="checked"/> Length<br/>
-                        <input type="radio" name="priority" value="time"/> Time<br/>
+                        <input th:each="type : ${priorityOptions}" type="radio" name="priority" 
+                               th:value="${type.a.toUpperCase()}"
+                               th:checked="(${type.a.toLowerCase() == prioritySelected.toLowerCase()})"
+                               th:text="${type.b}"/>
                     </fieldset>
                     <fieldset>
                         <legend>Algorithm</legend>
-                        <input type="radio" name="algorithm" value="DIJKSTRA"/> Dijkstra<br/>
-                        <input type="radio" name="algorithm" value="ASTAR"/> A*<br/>
-                        <input type="radio" name="algorithm" value="CONTRACTION_HIERARCHIES" checked="checked"/> Contraction Hierarchies<br/>
+                        <select id="algorithm" name="algorithm">
+                            <option th:each="type : ${algorithmOptions}" 
+                                    th:selected="(${type.a.toLowerCase() == algorithmSelected.toLowerCase()})"
+                                    th:value="${type.a.toUpperCase()}" 
+                                    th:text="${type.b}"/>
+                        </select>
                     </fieldset>
                 </fieldset>
                 <div hidden="hiden">
