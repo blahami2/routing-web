@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <script src="http://api4.mapy.cz/loader.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-        <script>Loader.load();</script>
+        <script  type="text/javascript" src="http://api4.mapy.cz/loader.js"></script>
+        <script type="text/javascript"  src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jak.js"></script>
+        <script type="text/javascript" >Loader.load();</script>
         <script type="text/javascript">
             /*<![CDATA[*/
             Number.prototype.toHHMMSS = function () {
@@ -28,6 +29,19 @@
             var layer;
             var marksLayer;
             var m;
+
+            function createMarker(coords, text) {
+                var markerDOM = JAK.mel("div");
+                var markerImg = JAK.mel("img", {src: SMap.CONFIG.img + "/marker/drop-red.png"});
+                markerDOM.appendChild(markerImg);
+                var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+                markerText.innerHTML = text;
+                markerDOM.appendChild(markerText);
+                var marker = new SMap.Marker(coords, text, {url: markerDOM});
+                return marker;
+            }
+
+
             function route() {
                 document.getElementById('result').value = "";
                 var coords = [];
@@ -72,10 +86,9 @@
                                     layer.addGeometry(g);
                                     var cz = m.computeCenterZoom(coords, true);
                                     m.setCenterZoom(cz[0], cz[1]);
-                                    var options = {};
-                                    var marker = new SMap.Marker(coords[0], "Start", options);
+                                    var marker = createMarker(coords[0], "S");
                                     marksLayer.addMarker(marker);
-                                    var marker = new SMap.Marker(coords[coords.length - 1], "Destination", options);
+                                    var marker = createMarker(coords[coords.length - 1], "T");
                                     marksLayer.addMarker(marker);
                                 }
                         )
@@ -231,18 +244,23 @@
                     var lat = coords.toWGS84(0)[1];
                     //console.log(lat.substring(0, lat.length - 2));
 
-                    var options = {};
                     if (first) {
                         document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
                         document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
-                        var marker = new SMap.Marker(coords, "Start", options);
+                        var marker = createMarker(coords, "S");
                         marksLayer.removeAll();
                         marksLayer.addMarker(marker);
                         first = false;
                     } else {
                         document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
                         document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
-                        var marker = new SMap.Marker(coords, "Destination", options);
+                        var options = {title: "end"};
+                        var markerDOM = JAK.mel("div");
+                        var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+                        markerText.innerHTML = "T";
+                        markerDOM.appendChild(markerText);
+                        var marker = createMarker(coords, "T");
+                        console.log(marker.getTitle());
                         marksLayer.addMarker(marker);
                         route();
                         first = true;
@@ -264,7 +282,7 @@
                         }
                     }
                 };
-                if(getUrlParameter('route') === 'true'){
+                if (getUrlParameter('route') === 'true') {
                     route();
                 }
             });
