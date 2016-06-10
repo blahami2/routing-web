@@ -30,7 +30,7 @@
             var marksLayer;
             var m;
 
-            function createMarker(coords, text) {
+            function createMarker(map, coords, text) {
                 var markerDOM = JAK.mel("div");
                 var markerImg = JAK.mel("img", {src: SMap.CONFIG.img + "/marker/drop-red.png"});
                 markerDOM.appendChild(markerImg);
@@ -38,7 +38,32 @@
                 markerText.innerHTML = text;
                 markerDOM.appendChild(markerText);
                 var marker = new SMap.Marker(coords, text, {url: markerDOM});
+                marker.decorate(SMap.Marker.Feature.Draggable);
+                var signals = m.getSignals();
+                signals.addListener(window, "marker-drag-stop", dragStop);
+                signals.addListener(window, "marker-drag-start", dragStart);
                 return marker;
+            }
+
+            function dragStart(e) {
+                //var node = e.target.getContainer();
+                //node[SMap.LAYER_MARKER].style.cursor = "help";
+            }
+
+            function dragStop(e) {
+                var node = e.target.getContainer();
+                node[SMap.LAYER_MARKER].style.cursor = "";
+                var coords = e.target.getCoords();
+                var longitude = coords.toWGS84()[0];
+                var latitude = coords.toWGS84()[1];
+                if (e.target.getId() === "S") { // source
+                    document.getElementById('fromLat').value = latitude;
+                    document.getElementById('fromLon').value = longitude;
+                } else { // target
+                    document.getElementById('toLat').value = latitude;
+                    document.getElementById('toLon').value = longitude;
+                }
+                route();
             }
 
 
@@ -55,7 +80,6 @@
                 algorithm = algCombobox.options[algCombobox.selectedIndex].value;
                 message = document.getElementById('message').value;
                 layer.removeAll();
-                marksLayer.removeAll();
                 requestString = document.getElementById('url').value + "rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm;
                 console.log(requestString);
                 $.getJSON(requestString)
@@ -84,11 +108,12 @@
                                     document.getElementById('stats_nodes').value = data.nodesExamined;
                                     var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
                                     layer.addGeometry(g);
+                                    marksLayer.removeAll();
                                     var cz = m.computeCenterZoom(coords, true);
                                     m.setCenterZoom(cz[0], cz[1]);
-                                    var marker = createMarker(coords[0], "S");
+                                    var marker = createMarker(m, coords[0], "S");
                                     marksLayer.addMarker(marker);
-                                    var marker = createMarker(coords[coords.length - 1], "T");
+                                    var marker = createMarker(m, coords[coords.length - 1], "T");
                                     marksLayer.addMarker(marker);
                                 }
                         )
@@ -247,19 +272,19 @@
                     if (first) {
                         document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
                         document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
-                        var marker = createMarker(coords, "S");
+                        var marker = createMarker(m, coords, "S");
                         marksLayer.removeAll();
                         marksLayer.addMarker(marker);
                         first = false;
                     } else {
                         document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
                         document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
-                        var options = {title: "end"};
-                        var markerDOM = JAK.mel("div");
-                        var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
-                        markerText.innerHTML = "T";
-                        markerDOM.appendChild(markerText);
-                        var marker = createMarker(coords, "T");
+                        //var options = {title: "end"};
+                        //var markerDOM = JAK.mel("div");
+                        //var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+                        //markerText.innerHTML = "T";
+                        //markerDOM.appendChild(markerText);
+                        var marker = createMarker(m, coords, "T");
                         console.log(marker.getTitle());
                         marksLayer.addMarker(marker);
                         route();
