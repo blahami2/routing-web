@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <script type="text/javascript" src="http://api.mapy.cz/loader.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/js/jak.js"></script>
+    <script type="text/javascript" src="../static/js/Map.js"></script>
+    <script type="text/javascript" src="../static/js/Router.js"></script>
+    <script type="text/javascript" src="../static/js/Reporter.js"></script>
+    <script type="text/javascript" src="../static/js/CommonElement.js"></script>
+    <script type="text/javascript" src="../static/js/CoordinateElement.js"></script>
+    <script type="text/javascript" src="../static/js/ComboBoxElement.js"></script>
+    <script type="text/javascript" src="../static/js/ResultElement.js"></script>
+    <script type="text/javascript" src="../static/js/Utils.js"></script>
+    <script type="text/javascript">Loader.load();</script>
+    <style type="text/css">
+        input {
+            width: 100%;
+        }
+
+        input[type="radio"] {
+            width: 15px;
+        }
+    </style>
+
+    <script th:inline="javascript">
+
+        var result;
+        var from;
+        var to;
+        var algorithm;
+        var metric;
+        var message;
+        var router;
+        var reporter;
+        var map;
+
+
+        function route() {
+            router.route(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude(), metric.getValue(), algorithm.getValue(),
+                    {
+                        done: function (length, time, executionTime, coordinates) {
+                            result.setResult("OK");
+                            result.setLength(length);
+                            result.setTime(time);
+                            result.setExecutionTime(executionTime);
+                            map.displayRoute(coordinates);
+                        },
+                        fail: function () {
+                            result.setResult("FAIL");
+                            result.setLength("-");
+                            result.setTime("-");
+                            result.setExecutionTime("-");
+                        }
+                    }
+            );
+        }
+
+        function report() {//(latFrom, lonFrom, latTo, lonTo, metric, algorithm, message, onReportListener)
+            result.setValue("REPORTING...");
+            reporter.report(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude(), metric.getValue(), algorithm.getValue(), message.getValue(),
+                    {
+                        done: function () {
+                            result.setValue("REPORTED");
+                        },
+                        fail: function () {
+                            result.setValue("REPORT HAS FAILED");
+                        }
+                    }
+            );
+        }
+        ;
+
+        $(document).ready(function () {
+            result = new ResultElement('result', 'length', 'time', 'time_routing');
+            from = new CoordinateElement('fromLat', 'fromLon');
+            to = new CoordinateElement('toLat', 'toLon');
+            algorithm = new ComboBoxElement('algorithm');
+            metric = new ComboBoxElement('metric');
+            message = new CommonElement('message');
+            router = new Router(document.getElementById('url').value);
+            reporter = new Reporter(document.getElementById('url').value);
+            map = new Map("map",
+                    {
+                        dropSource: function (latitude, longitude) {
+                            from.setLatitude(latitude).setLongitude(longitude);
+                        },
+                        dropTarget: function (latitude, longitude) {
+                            to.setLatitude(latitude).setLongitude(longitude);
+                            route();
+                        }
+                    },
+                    {
+                        sourceClick: function (latitude, longitude) {
+                            from.setLatitude(latitude).setLongitude(longitude);
+                        },
+                        targetClick: function (latitude, longitude) {
+                            to.setLatitude(latitude).setLongitude(longitude);
+                            route();
+                        }
+                    }
+            );
+
+            /*<![CDATA[*/
+            var getUrlParameter = function getUrlParameter(sParam) {
+                var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                        sURLVariables = sPageURL.split('&'),
+                        sParameterName,
+                        i;
+
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam) {
+                        return sParameterName[1] === undefined ? true : sParameterName[1];
+                    }
+                }
+            };
+            if (getUrlParameter('route') === 'true') {
+                route();
+            }
+            /*]]>*/
+
+        })
+    </script>
+    <title>JSP Page</title>
+</head>
+<body>
+<div id="map" style="width:70%; min-height: 800px; float: left;"></div>
+<script type="text/javascript">
+    var m = new SMap(JAK.gel("map"));
+    console.log(m);
+    console.log(Object.getOwnPropertyNames(m));
+    console.log(Object.getOwnPropertyNames(SMap));
+    console.log(Object.getOwnPropertyNames(SMap).filter(function (p) {
+        return typeof Math[p] === 'function';
+    }));
+    function getMethods(obj) {
+        var result = [];
+        for (var id in obj) {
+            try {
+                if (typeof(obj[id]) == "function") {
+                    result.push(id + ": " + obj[id].toString());
+                }
+            } catch (err) {
+                result.push(id + ": inaccessible");
+            }
+        }
+        return result;
+    }
+    console.log(getMethods(m).join("\n"));
+    m.getContainer();
+
+</script>
+<div id="right_panel" style="margin-left: 1%; margin-right: 1%; float: right; width: 28%;">
+    <form>
+        <fieldset>
+            <legend>Route</legend>
+            <fieldset>
+                <legend>From</legend>
+                <label for="fromLon">longitude:</label>
+                <input id="fromLon" type="text" name="longitude" th:value="${fromLon}"/>
+                <label for="fromLat">latitude:</label>
+                <input id="fromLat" type="text" name="latitude" th:value="${fromLat}"/>
+            </fieldset>
+            <fieldset>
+                <legend>To</legend>
+                <label for="toLon">longitude:</label>
+                <input id="toLon" type="text" name="longitude" th:value="${toLon}"/>
+                <label for="toLat">latitude:</label>
+                <input id="toLat" type="text" name="latitude" th:value="${toLat}"/>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Options</legend>
+            <fieldset>
+                <legend>Metric</legend>
+                <select id="metric" name="metric">
+                    <option th:each="type : ${metricOptions}"
+                            th:value="${type.name()}"
+                            th:text="${type.name().toLowerCase()}"
+                            th:selected="(${type.equals(metricSelected)})"
+                    />
+                </select>
+            </fieldset>
+            <fieldset>
+                <legend>Algorithm</legend>
+                <select id="algorithm" name="algorithm">
+                    <option th:each="type : ${algorithmOptions}"
+                            th:value="${type.name()}"
+                            th:text="${type.name().toLowerCase()}"
+                            th:selected="(${type.equals(algorithmSelected)})"
+                    />
+                </select>
+            </fieldset>
+        </fieldset>
+        <div hidden="hiden">
+            <input type="text" id="url" th:text="${url}" hidden="hidden"/>
+        </div>
+    </form>
+    <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>
+
+    <fieldset>
+        <legend>Result</legend>
+        <label for="result">result:</label>
+        <input id="result" type="text" name="result"/>
+        <label for="length">length[km]:</label>
+        <input id="length" type="text" name="length"/>
+        <label for="time">time[h]:</label>
+        <input id="time" type="text" name="time"/>
+    </fieldset>
+    <fieldset>
+        <legend>Execution statistics</legend>
+        <label for="time_routing">Routing[ms]:</label>
+        <input id="time_routing" type="text" name="time_routing"/>
+    </fieldset>
+    <fieldset>
+        <legend>Report</legend>
+        <label for="message">message:</label>
+        <input id="message" type="text" name="result"/>
+        <button type="button" onClick="report()" style="width: 100%; margin: 0%;">report!</button>
+    </fieldset>
+</div>
+<div id="static_panel" style="float: left;">
+    <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports
+        spreadsheet</a>
+</div>
+</body>
+</html>

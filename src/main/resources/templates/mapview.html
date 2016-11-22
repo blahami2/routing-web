@@ -1,317 +1,313 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-        <script  type="text/javascript" src="http://api4.mapy.cz/loader.js"></script>
-        <script type="text/javascript"  src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-        <script type="text/javascript" src="js/jak.js"></script>
-        <script type="text/javascript" >Loader.load();</script>
-        <script type="text/javascript">
-            /*<![CDATA[*/
-            Number.prototype.toHHMMSS = function () {
-                var seconds = Math.floor(this),
-                        hours = Math.floor(seconds / 3600);
-                seconds -= hours * 3600;
-                var minutes = Math.floor(seconds / 60);
-                seconds -= minutes * 60;
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script  type="text/javascript" src="http://api4.mapy.cz/loader.js"></script>
+    <script type="text/javascript"  src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/js/jak.js"></script>
+    <script type="text/javascript" >Loader.load();</script>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        Number.prototype.toHHMMSS = function () {
+            var seconds = Math.floor(this),
+                    hours = Math.floor(seconds / 3600);
+            seconds -= hours * 3600;
+            var minutes = Math.floor(seconds / 60);
+            seconds -= minutes * 60;
 
-                if (hours < 10) {
-                    hours = "0" + hours;
-                }
-                if (minutes < 10) {
-                    minutes = "0" + minutes;
-                }
-                if (seconds < 10) {
-                    seconds = "0" + seconds;
-                }
-                return hours + ':' + minutes + ':' + seconds;
-            };
-            var layer;
-            var marksLayer;
-            var m;
-
-            function createMarker(map, coords, text) {
-                var markerDOM = JAK.mel("div");
-                var markerImg = JAK.mel("img", {src: SMap.CONFIG.img + "/marker/drop-red.png"});
-                markerDOM.appendChild(markerImg);
-                var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
-                markerText.innerHTML = text;
-                markerDOM.appendChild(markerText);
-                var marker = new SMap.Marker(coords, text, {url: markerDOM});
-                marker.decorate(SMap.Marker.Feature.Draggable);
-                var signals = m.getSignals();
-                signals.addListener(window, "marker-drag-stop", dragStop);
-                signals.addListener(window, "marker-drag-start", dragStart);
-                return marker;
+            if (hours < 10) {
+                hours = "0" + hours;
             }
-
-            function dragStart(e) {
-                //var node = e.target.getContainer();
-                //node[SMap.LAYER_MARKER].style.cursor = "help";
+            if (minutes < 10) {
+                minutes = "0" + minutes;
             }
+            if (seconds < 10) {
+                seconds = "0" + seconds;
+            }
+            return hours + ':' + minutes + ':' + seconds;
+        };
+        var layer;
+        var marksLayer;
+        var m;
 
-            function dragStop(e) {
-                var node = e.target.getContainer();
-                node[SMap.LAYER_MARKER].style.cursor = "";
-                var coords = e.target.getCoords();
-                var longitude = coords.toWGS84()[0];
-                var latitude = coords.toWGS84()[1];
-                if (e.target.getId() === "S") { // source
-                    document.getElementById('fromLat').value = latitude;
-                    document.getElementById('fromLon').value = longitude;
-                } else { // target
-                    document.getElementById('toLat').value = latitude;
-                    document.getElementById('toLon').value = longitude;
-                }
+        function createMarker(map, coords, text) {
+            var markerDOM = JAK.mel("div");
+            var markerImg = JAK.mel("img", {src: SMap.CONFIG.img + "/marker/drop-red.png"});
+            markerDOM.appendChild(markerImg);
+            var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+            markerText.innerHTML = text;
+            markerDOM.appendChild(markerText);
+            var marker = new SMap.Marker(coords, text, {url: markerDOM});
+            marker.decorate(SMap.Marker.Feature.Draggable);
+            var signals = m.getSignals();
+            signals.addListener(window, "marker-drag-stop", dragStop);
+            signals.addListener(window, "marker-drag-start", dragStart);
+            return marker;
+        }
+
+        function dragStart(e) {
+            //var node = e.target.getContainer();
+            //node[SMap.LAYER_MARKER].style.cursor = "help";
+        }
+
+        function dragStop(e) {
+            var node = e.target.getContainer();
+            node[SMap.LAYER_MARKER].style.cursor = "";
+            var coords = e.target.getCoords();
+            var longitude = coords.toWGS84()[0];
+            var latitude = coords.toWGS84()[1];
+            if (e.target.getId() === "S") { // source
+                document.getElementById('fromLat').value = latitude;
+                document.getElementById('fromLon').value = longitude;
+            } else { // target
+                document.getElementById('toLat').value = latitude;
+                document.getElementById('toLon').value = longitude;
+            }
+            route();
+        }
+
+
+        function route() {
+            document.getElementById('result').value = "";
+            var coords = [];
+
+            latFrom = document.getElementById('fromLat').value;
+            lonFrom = document.getElementById('fromLon').value;
+            latTo = document.getElementById('toLat').value;
+            lonTo = document.getElementById('toLon').value;
+            var metCombobox = document.getElementById('metric');
+            metric = metCombobox.options[metCombobox.selectedIndex].value;
+            var algCombobox = document.getElementById('algorithm');
+            algorithm = algCombobox.options[algCombobox.selectedIndex].value;
+            message = document.getElementById('message').value;
+            layer.removeAll();
+            requestString = document.getElementById('url').value + "route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm;
+            console.log(requestString);
+            $.getJSON(requestString)
+                    .done(
+                            function (data) {
+                                //var items = [];
+                                //$.each(data, function (key, val) {
+                                //    console.log(key + ":" + val.latitude);
+                                //items.push("<li id='" + key + "'>" + val + "</li>");
+                                //});
+                                //$("<ul/>", {
+                                //    "class": "my-new-list",
+                                //    html: items.join("")
+                                //}).appendTo("body");
+                                $.each(data.coords, function (key, val) {
+                                    coords.push(
+                                            SMap.Coords.fromWGS84(val.longitude, val.latitude)
+                                    );
+                                });
+                                document.getElementById('result').value = "OK";
+                                document.getElementById('length').value = data.length / 1000;
+                                document.getElementById('time').value = data.time.toHHMMSS();
+                                document.getElementById('time_routing').value = data.executionTime;
+                                var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
+                                layer.addGeometry(g);
+                                marksLayer.removeAll();
+                                var cz = m.computeCenterZoom(coords, true);
+                                m.setCenterZoom(cz[0], cz[1]);
+                                var marker1 = createMarker(m, coords[0], "S");
+                                marksLayer.addMarker(marker1);
+                                var marker2 = createMarker(m, coords[coords.length - 1], "T");
+                                marksLayer.addMarker(marker2);
+                            }
+                    )
+                    .fail(
+                            function () {
+                                document.getElementById('result').value = "NO PATH FOUND";
+                                document.getElementById('length').value = "";
+                                document.getElementById('time').value = "";
+                                document.getElementById('time_routing').value = "";
+                            }
+                    );
+            //console.log("doing some stuff");
+            //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
+        }
+        ;
+        function report() {
+            document.getElementById('result').value = "";
+            latFrom = document.getElementById('fromLat').value;
+            lonFrom = document.getElementById('fromLon').value;
+            latTo = document.getElementById('toLat').value;
+            lonTo = document.getElementById('toLon').value;
+            var metCombobox = document.getElementById('metric');
+            metric = metCombobox.options[metCombobox.selectedIndex].value;
+            var algCombobox = document.getElementById('algorithm');
+            algorithm = algCombobox.options[algCombobox.selectedIndex].value;
+            message = document.getElementById('message').value;
+            requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm + "&message=" + encodeURIComponent(message);
+            console.log(requestString);
+            $.getJSON(requestString)
+                    .done(
+                            function (data) {
+                                document.getElementById('result').value = "REPORTED";
+                            }
+                    )
+                    .fail(
+                            function () {
+                                document.getElementById('result').value = "REPORT HAS FAILED";
+                            }
+                    );
+        }
+        ;
+        /*]]>*/
+    </script>
+    <style type="text/css">
+        input {
+            width: 100%;
+        }
+        input[type="radio"]{
+            width: 15px;
+        }
+    </style>
+    <title>JSP Page</title>
+</head>
+<body>
+<div id="map" style="width:70%; min-height: 800px; float: left;"></div>
+<div id="right_panel" style="margin-left: 1%; margin-right: 1%; float: right; width: 28%;">
+    <form>
+        <fieldset>
+            <legend>Route</legend>
+            <fieldset>
+                <legend>From</legend>
+                <label for="fromLon">longitude:</label>
+                <input id="fromLon" type="text" name="longitude" th:value="${fromLon}" />
+                <label for="fromLat">latitude:</label>
+                <input id="fromLat" type="text" name="latitude" th:value="${fromLat}" />
+            </fieldset>
+            <fieldset>
+                <legend>To</legend>
+                <label for="toLon">longitude:</label>
+                <input id="toLon" type="text" name="longitude" th:value="${toLon}" />
+                <label for="toLat">latitude:</label>
+                <input id="toLat" type="text" name="latitude" th:value="${toLat}" />
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Options</legend>
+            <fieldset>
+                <legend>Metric</legend>
+                <select id="metric" name="metric">
+                    <option th:each="type : ${metricOptions}"
+                            th:value="${type.name().toUpperCase()}"
+                            th:text="${type.name().toLowerCase()}"/>
+                </select>
+            </fieldset>
+            <fieldset>
+                <legend>Algorithm</legend>
+                <select id="algorithm" name="algorithm">
+                    <option th:each="type : ${algorithmOptions}"
+                            th:value="${type.name().toUpperCase()}"
+                            th:text="${type.name().toLowerCase()}"/>
+                </select>
+            </fieldset>
+        </fieldset>
+        <div hidden="hiden">
+            <input type="text" id="url" th:text="${url}" hidden="hidden"/>
+        </div>
+    </form>
+    <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>
+
+    <fieldset>
+        <legend>Result</legend>
+        <label for="result">result:</label>
+        <input id="result" type="text" name="result"/>
+        <label for="length">length[km]:</label>
+        <input id="length" type="text" name="length"/>
+        <label for="time">time[h]:</label>
+        <input id="time" type="text" name="time"/>
+    </fieldset>
+    <fieldset>
+        <legend>Execution statistics</legend>
+        <!--<label for="time_nodesearch">Searching for nodes[ms]:</label>-->
+        <!--<input id="time_nodesearch" type="text" name="time_nodesearch"/>-->
+        <label for="time_routing">Routing[ms]:</label>
+        <input id="time_routing" type="text" name="time_routing"/>
+        <!--<label for="time_coordinates">Loading coordinates[ms]:</label>-->
+        <!--<input id="time_coordinates" type="text" name="time_coordinates"/>-->
+        <!--<label for="stats_nodes">Examined nodes[#]:</label>-->
+        <!--<input id="stats_nodes" type="text" name="stats_nodes"/>-->
+    </fieldset>
+    <fieldset>
+        <legend>Report</legend>
+        <label for="message">message:</label>
+        <input id="message" type="text" name="result"/>
+        <button type="button" onClick="report()" style="width: 100%; margin: 0%;">report!</button>
+    </fieldset>
+</div>
+<div id="static_panel" style="float: left;">
+    <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports spreadsheet</a>
+</div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    $(document).ready(function () {
+        var first = true;
+        m = new SMap(JAK.gel("map"));
+        var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
+        m.addDefaultControls();
+        layer = new SMap.Layer.Geometry();
+        m.addLayer(layer).enable();
+        marksLayer = new SMap.Layer.Marker();
+        m.addLayer(marksLayer);
+        marksLayer.enable();
+
+        function click(e, elm) {
+            var coords = SMap.Coords.fromEvent(e.data.event, m);
+            //alert("Kliknuto na " + coords.toWGS84(2).reverse().join(" "));
+            //console.log(coords.toWGS84(0));
+            //console.log(coords.toWGS84(1));
+            //console.log(coords.toWGS84(2));
+            var lon = coords.toWGS84(0)[0];
+            //console.log(lon.substring(0, lon.length - 2));
+            var lat = coords.toWGS84(0)[1];
+            //console.log(lat.substring(0, lat.length - 2));
+
+            if (first) {
+                document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
+                document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
+                var marker = createMarker(m, coords, "S");
+                marksLayer.removeAll();
+                marksLayer.addMarker(marker);
+                first = false;
+            } else {
+                document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
+                document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
+                //var options = {title: "end"};
+                //var markerDOM = JAK.mel("div");
+                //var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+                //markerText.innerHTML = "T";
+                //markerDOM.appendChild(markerText);
+                var marker = createMarker(m, coords, "T");
+                console.log(marker.getTitle());
+                marksLayer.addMarker(marker);
                 route();
+                first = true;
             }
+        }
+        m.getSignals().addListener(window, "map-click", click);
 
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
 
-            function route() {
-                document.getElementById('result').value = "";
-                var coords = [];
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
 
-                latFrom = document.getElementById('fromLat').value;
-                lonFrom = document.getElementById('fromLon').value;
-                latTo = document.getElementById('toLat').value;
-                lonTo = document.getElementById('toLon').value;
-                priority = $("input[name=priority]:checked").val();
-                var algCombobox = document.getElementById('algorithm');
-                algorithm = algCombobox.options[algCombobox.selectedIndex].value;
-                message = document.getElementById('message').value;
-                layer.removeAll();
-                requestString = document.getElementById('url').value + "rest/route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm;
-                console.log(requestString);
-                $.getJSON(requestString)
-                        .done(
-                                function (data) {
-                                    //var items = [];
-                                    //$.each(data, function (key, val) {
-                                    //    console.log(key + ":" + val.latitude);
-                                    //items.push("<li id='" + key + "'>" + val + "</li>");
-                                    //});
-                                    //$("<ul/>", {
-                                    //    "class": "my-new-list",
-                                    //    html: items.join("")
-                                    //}).appendTo("body");
-                                    $.each(data.coordinates, function (key, val) {
-                                        coords.push(
-                                                SMap.Coords.fromWGS84(val.longitude, val.latitude)
-                                                );
-                                    });
-                                    document.getElementById('result').value = "OK";
-                                    document.getElementById('length').value = data.length / 1000;
-                                    document.getElementById('time').value = data.time.toHHMMSS();
-                                    document.getElementById('time_nodesearch').value = data.searchTime;
-                                    document.getElementById('time_routing').value = data.routeTime;
-                                    document.getElementById('time_coordinates').value = data.coordinatesTime;
-                                    document.getElementById('stats_nodes').value = data.nodesExamined;
-                                    var g = new SMap.Geometry(SMap.GEOMETRY_POLYLINE, null, coords);
-                                    layer.addGeometry(g);
-                                    marksLayer.removeAll();
-                                    var cz = m.computeCenterZoom(coords, true);
-                                    m.setCenterZoom(cz[0], cz[1]);
-                                    var marker = createMarker(m, coords[0], "S");
-                                    marksLayer.addMarker(marker);
-                                    var marker = createMarker(m, coords[coords.length - 1], "T");
-                                    marksLayer.addMarker(marker);
-                                }
-                        )
-                        .fail(
-                                function () {
-                                    document.getElementById('result').value = "NO PATH FOUND";
-                                    document.getElementById('length').value = "";
-                                    document.getElementById('time').value = "";
-                                    document.getElementById('time_nodesearch').value = "";
-                                    document.getElementById('time_routing').value = "";
-                                    document.getElementById('time_coordinates').value = "";
-                                    document.getElementById('stats_nodes').value = "";
-                                }
-                        );
-                //console.log("doing some stuff");
-                //var centerMap = SMap.Coords.fromWGS84(midpoint.getLongitude(), midpoint.getLatitude());
-            }
-            ;
-            function report() {
-                document.getElementById('result').value = "";
-                latFrom = document.getElementById('fromLat').value;
-                lonFrom = document.getElementById('fromLon').value;
-                latTo = document.getElementById('toLat').value;
-                lonTo = document.getElementById('toLon').value;
-                priority = $("input[name=priority]:checked").val();
-                var algCombobox = document.getElementById('algorithm');
-                algorithm = algCombobox.options[algCombobox.selectedIndex].value;
-                message = document.getElementById('message').value;
-                requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&priority=" + priority + "&algorithm=" + algorithm + "&message=" + encodeURIComponent(message);
-                console.log(requestString);
-                $.getJSON(requestString)
-                        .done(
-                                function (data) {
-                                    document.getElementById('result').value = "REPORTED";
-                                }
-                        )
-                        .fail(
-                                function () {
-                                    document.getElementById('result').value = "REPORT HAS FAILED";
-                                }
-                        );
-            }
-            ;
-            /*]]>*/
-        </script>
-        <style type="text/css">
-            input {
-                width: 100%;
-            }
-            input[type="radio"]{
-                width: 15px;
-            }
-        </style>
-        <title>JSP Page</title>
-    </head>
-    <body>
-        <div id="map" style="width:70%; min-height: 800px; float: left;"></div>
-        <div id="right_panel" style="margin-left: 1%; margin-right: 1%; float: right; width: 28%;">
-            <form>
-                <fieldset>
-                    <legend>Route</legend>
-                    <fieldset>
-                        <legend>From</legend>
-                        <label for="longitude">longitude:</label>
-                        <input id="fromLon" type="text" name="longitude" th:value="${lonFrom}" />
-                        <label for="latitude">latitude:</label>
-                        <input id="fromLat" type="text" name="latitude" th:value="${latFrom}" />
-                    </fieldset>
-                    <fieldset>
-                        <legend>To</legend>
-                        <label for="longitude">longitude:</label>
-                        <input id="toLon" type="text" name="longitude" th:value="${lonTo}" />
-                        <label for="latitude">latitude:</label>
-                        <input id="toLat" type="text" name="latitude" th:value="${latTo}" />
-                    </fieldset>
-                </fieldset>
-                <fieldset>
-                    <legend>Options</legend>
-                    <fieldset>
-                        <legend>Priority</legend>
-                        <input th:each="type : ${priorityOptions}" type="radio" name="priority" 
-                               th:value="${type.a.toUpperCase()}"
-                               th:checked="(${type.a.toLowerCase() == prioritySelected.toLowerCase()})"
-                               th:text="${type.b}"/>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Algorithm</legend>
-                        <select id="algorithm" name="algorithm">
-                            <option th:each="type : ${algorithmOptions}" 
-                                    th:selected="(${type.a.toLowerCase() == algorithmSelected.toLowerCase()})"
-                                    th:value="${type.a.toUpperCase()}" 
-                                    th:text="${type.b}"/>
-                        </select>
-                    </fieldset>
-                </fieldset>
-                <div hidden="hiden">
-                    <input type="text" id="url" th:text="${url}" hidden="hidden"/>
-                </div>
-            </form>
-            <button type="button" onClick="route()" style="width: 98%; margin: 1%;">route!</button>
-
-            <fieldset>
-                <legend>Result</legend>
-                <label for="result">result:</label>
-                <input id="result" type="text" name="result"/>
-                <label for="length">length[km]:</label>
-                <input id="length" type="text" name="length"/>
-                <label for="time">time[h]:</label>
-                <input id="time" type="text" name="time"/>
-            </fieldset>
-            <fieldset>
-                <legend>Execution statistics</legend>
-                <label for="time_nodesearch">Searching for nodes[ms]:</label>
-                <input id="time_nodesearch" type="text" name="time_nodesearch"/>
-                <label for="time_routing">Routing[ms]:</label>
-                <input id="time_routing" type="text" name="time_routing"/>
-                <label for="time_coordinates">Loading coordinates[ms]:</label>
-                <input id="time_coordinates" type="text" name="time_coordinates"/>
-                <label for="stats_nodes">Examined nodes[#]:</label>
-                <input id="stats_nodes" type="text" name="stats_nodes"/>
-            </fieldset>
-            <fieldset>
-                <legend>Report</legend>
-                <label for="message">message:</label>
-                <input id="message" type="text" name="result"/>
-                <button type="button" onClick="report()" style="width: 100%; margin: 0%;">report!</button>
-            </fieldset>
-        </div>
-        <div id="static_panel" style="float: left;">
-            <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports spreadsheet</a>
-        </div>
-        <script th:inline="javascript">
-            /*<![CDATA[*/
-            $(document).ready(function () {
-                var first = true;
-                m = new SMap(JAK.gel("map"));
-                var l = m.addDefaultLayer(SMap.DEF_BASE).enable();
-                m.addDefaultControls();
-                layer = new SMap.Layer.Geometry();
-                m.addLayer(layer).enable();
-                marksLayer = new SMap.Layer.Marker();
-                m.addLayer(marksLayer);
-                marksLayer.enable();
-
-                function click(e, elm) {
-                    var coords = SMap.Coords.fromEvent(e.data.event, m);
-                    //alert("Kliknuto na " + coords.toWGS84(2).reverse().join(" "));
-                    //console.log(coords.toWGS84(0));
-                    //console.log(coords.toWGS84(1));
-                    //console.log(coords.toWGS84(2));
-                    var lon = coords.toWGS84(0)[0];
-                    //console.log(lon.substring(0, lon.length - 2));
-                    var lat = coords.toWGS84(0)[1];
-                    //console.log(lat.substring(0, lat.length - 2));
-
-                    if (first) {
-                        document.getElementById('fromLat').value = lat.substring(0, lat.length - 2);
-                        document.getElementById('fromLon').value = lon.substring(0, lon.length - 2);
-                        var marker = createMarker(m, coords, "S");
-                        marksLayer.removeAll();
-                        marksLayer.addMarker(marker);
-                        first = false;
-                    } else {
-                        document.getElementById('toLat').value = lat.substring(0, lat.length - 2);
-                        document.getElementById('toLon').value = lon.substring(0, lon.length - 2);
-                        //var options = {title: "end"};
-                        //var markerDOM = JAK.mel("div");
-                        //var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
-                        //markerText.innerHTML = "T";
-                        //markerDOM.appendChild(markerText);
-                        var marker = createMarker(m, coords, "T");
-                        console.log(marker.getTitle());
-                        marksLayer.addMarker(marker);
-                        route();
-                        first = true;
-                    }
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : sParameterName[1];
                 }
-                m.getSignals().addListener(window, "map-click", click);
-
-                var getUrlParameter = function getUrlParameter(sParam) {
-                    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-                            sURLVariables = sPageURL.split('&'),
-                            sParameterName,
-                            i;
-
-                    for (i = 0; i < sURLVariables.length; i++) {
-                        sParameterName = sURLVariables[i].split('=');
-
-                        if (sParameterName[0] === sParam) {
-                            return sParameterName[1] === undefined ? true : sParameterName[1];
-                        }
-                    }
-                };
-                if (getUrlParameter('route') === 'true') {
-                    route();
-                }
-            });
-            /*]]>*/
-        </script>
-    </body>
+            }
+        };
+        if (getUrlParameter('route') === 'true') {
+            route();
+        }
+    });
+    /*]]>*/
+</script>
+</body>
 </html>
