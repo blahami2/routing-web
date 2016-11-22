@@ -15,6 +15,9 @@ import cz.certicon.routing.memsensitive.algorithm.algorithms.ContractionHierarch
 import cz.certicon.routing.memsensitive.algorithm.algorithms.ContractionHierarchiesUbRoutingAlgorithm;
 import cz.certicon.routing.memsensitive.algorithm.algorithms.DijkstraRoutingAlgorithm;
 import cz.certicon.routing.memsensitive.algorithm.common.SimpleRouteBuilder;
+import cz.certicon.routing.memsensitive.algorithm.preprocessing.ch.ContractionHierarchiesPreprocessor;
+import cz.certicon.routing.memsensitive.algorithm.preprocessing.ch.calculators.SpatialHeuristicEdgeDifferenceCalculator;
+import cz.certicon.routing.memsensitive.algorithm.preprocessing.ch.strategies.NeighboursOnlyRecalculationStrategy;
 import cz.certicon.routing.memsensitive.data.ch.ContractionHierarchiesDataRW;
 import cz.certicon.routing.memsensitive.data.ch.NotPreprocessedException;
 import cz.certicon.routing.memsensitive.data.ch.sqlite.SqliteContractionHierarchiesRW;
@@ -25,6 +28,8 @@ import cz.certicon.routing.memsensitive.data.nodesearch.NodeSearcher;
 import cz.certicon.routing.memsensitive.data.nodesearch.sqlite.SqliteNodeSearcher;
 import cz.certicon.routing.memsensitive.data.path.PathReader;
 import cz.certicon.routing.memsensitive.data.path.sqlite.SqlitePathReader;
+import cz.certicon.routing.memsensitive.data.turntables.TurnTablesReader;
+import cz.certicon.routing.memsensitive.data.turntables.sqlite.SqliteTurnTablesReader;
 import cz.certicon.routing.memsensitive.model.entity.DistanceType;
 import cz.certicon.routing.memsensitive.model.entity.Graph;
 import cz.certicon.routing.memsensitive.model.entity.NodeSet;
@@ -35,6 +40,7 @@ import cz.certicon.routing.memsensitive.model.entity.ch.SimpleChDataFactory;
 import cz.certicon.routing.memsensitive.model.entity.common.SimpleGraphBuilderFactory;
 import cz.certicon.routing.memsensitive.model.entity.common.SimpleNodeSetBuilderFactory;
 import cz.certicon.routing.memsensitive.model.entity.common.SimplePathBuilder;
+import cz.certicon.routing.memsensitive.model.entity.common.SimpleTurnTablesBuilder;
 import cz.certicon.routing.model.basic.TimeUnits;
 import cz.certicon.routing.model.entity.Coordinate;
 import cz.certicon.routing.model.entity.NodeSetBuilderFactory;
@@ -99,7 +105,7 @@ public class GraphBean implements Serializable {
         return routingAlgorithm;
     }
 
-    public Route getRoute( DistanceType distanceType, AlgorithmType algorithm, Map<Integer, Float> from, Map<Integer, Float> to ) throws IOException, RouteNotFoundException {
+    public Route getRoute( DistanceType distanceType, AlgorithmType algorithm, Map<Integer, RoutingAlgorithm.NodeEntry> from, Map<Integer, RoutingAlgorithm.NodeEntry> to ) throws IOException, RouteNotFoundException {
         RoutingAlgorithm<Graph> alg = getRoutingAlgorithm( distanceType, algorithm );
         Route route = alg.route( routeBuilder, from, to );
         return route;
@@ -139,14 +145,16 @@ public class GraphBean implements Serializable {
             System.out.println( "Reading preprocessed data..." );
             time.start();
             NodeSetBuilderFactory<NodeSet<Graph>> nodeSetFactory = new SimpleNodeSetBuilderFactory( graph, distanceType );
+            TurnTablesReader ttReader = new SqliteTurnTablesReader( databasePropertiesBean.getProperties() );
+            graph.setTurnRestrictions( ttReader.read( graph, new SimpleTurnTablesBuilder() ).getTr() );
             ContractionHierarchiesDataRW chDataRw = new SqliteContractionHierarchiesRW( databasePropertiesBean.getProperties() );
+            ContractionHierarchiesPreprocessor preprocessor = new ContractionHierarchiesPreprocessor();
+            preprocessor.setEdgeDifferenceCalculator( new SpatialHeuristicEdgeDifferenceCalculator( graph.getNodeCount() ) );
+            preprocessor.setNodeRecalculationStrategy( new NeighboursOnlyRecalculationStrategy() );
             PreprocessedData preprocessedData;
-            try {
-                preprocessedData = chDataRw.read( new SimpleChDataFactory( graph, distanceType ) );
-                System.out.println( "Done reading preprocessed data in " + time.getCurrentTimeString() );
-            } catch ( NotPreprocessedException ex ) {
-                throw new IOException( ex );
-            }
+            preprocessedData = chDataRw.read( new SimpleChDataFactory( graph, distanceType ), graph, preprocessor );
+            preprocessedData.setTurnRestrictions( ttReader.read( graph, new SimpleTurnTablesBuilder(), preprocessedData ).getTr() );
+            System.out.println( "Done reading preprocessed data in " + time.getCurrentTimeString() );
             gd = new GraphData( graph, nodeSetFactory, preprocessedData );
             graphDataMap.put( distanceType, gd );
         }
