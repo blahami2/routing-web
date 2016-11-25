@@ -1,4 +1,4 @@
-package cz.certicon.web.model;
+package cz.certicon.web.common.model;
 
 
 import cz.certicon.routing.model.values.Coordinate;

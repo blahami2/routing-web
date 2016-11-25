@@ -5,11 +5,10 @@ import cz.certicon.routing.algorithm.sara.preprocessing.PreprocessingInput;
 import cz.certicon.routing.algorithm.sara.preprocessing.overlay.OverlayCreator;
 import cz.certicon.routing.algorithm.sara.query.mld.MLDRecursiveRouteUnpacker;
 import cz.certicon.routing.algorithm.sara.query.mld.RouteUnpacker;
-import cz.certicon.routing.data.GraphDAO;
-import cz.certicon.routing.data.RouteDataDAO;
-import cz.certicon.routing.data.SqliteGraphDAO;
-import cz.certicon.routing.data.SqliteRouteDAO;
+import cz.certicon.routing.data.*;
 import cz.certicon.routing.model.basic.Pair;
+import cz.certicon.web.router.services.RouteService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,55 +21,28 @@ import java.util.Properties;
 /**
  * @author Michael Blaha {@literal <blahami2@gmail.com>}
  */
-//@PropertySource( "connection.properties" )
 @Configuration
-@ComponentScan
+@ComponentScan( basePackageClasses = { RouterConfiguration.class, RouteService.class } )
 public class RouterConfiguration {
 
     @Bean
-    public RoutingAlgorithm multileveldijkstra() {
-        return null;
+    public GraphDAO getGraphDao( @Autowired @Qualifier( "connectionProperties" ) Properties connectionProperties ) {
+        return new SqliteGraphDAO( connectionProperties );
     }
 
     @Bean
-    public RoutingAlgorithm dijkstra() {
-        return null;
+    public RouteDataDAO getRouteDataDao( @Autowired @Qualifier( "connectionProperties" ) Properties connectionProperties ) {
+        return new SqliteRouteDAO( connectionProperties );
     }
 
     @Bean
-    public GraphDAO getGraphDao() {
-        return new SqliteGraphDAO( getConnectionProperties() );
+    public PointSearcher getPointSearcher( @Autowired @Qualifier( "connectionProperties" ) Properties connectionProperties ) {
+        return new SqlitePointSearcher( connectionProperties );
     }
 
     @Bean
-    public Properties getConnectionProperties(
-//            @Value( "${db.spatialite_path}" ) String spatialitePath
-    ) {
-        Properties properties = new Properties(); // load propeties
-        return properties;
-    }
-
-    @Bean
-    public PreprocessingInput getPreprocessingInput() {
-        return null;
-    }
-
-    @Bean
-    public OverlayCreator getOverlayCreator() {
-        OverlayCreator creator = new OverlayCreator();
-        OverlayCreator.SaraSetup setup = creator.getSetup();
-        // setup.setShit(...)
-        return creator;
-    }
-
-    @Bean
-    public RouteUnpacker getRouteUnpacker() {
-        return new MLDRecursiveRouteUnpacker();
-    }
-
-    @Bean
-    public RouteDataDAO getRouteDataDao() {
-        return new SqliteRouteDAO( getConnectionProperties() );
+    public GraphDataDao getGraphDataDao( @Autowired @Qualifier( "connectionProperties" ) Properties connectionProperties ) {
+        return new SqliteGraphDataDAO( connectionProperties );
     }
 
 }

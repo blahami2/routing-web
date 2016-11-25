@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <script  type="text/javascript" src="http://api4.mapy.cz/loader.js"></script>
-    <script type="text/javascript"  src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://api4.mapy.cz/loader.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script type="text/javascript" src="../static/js/jak.js"></script>
-    <script type="text/javascript" >Loader.load();</script>
+    <script type="text/javascript">Loader.load();</script>
     <script type="text/javascript">
         /*<![CDATA[*/
         Number.prototype.toHHMMSS = function () {
@@ -30,11 +30,30 @@
         var marksLayer;
         var m;
 
+        function getRegions(){
+            var checkboxes = document.getElementsByName("regions");
+            var reg = 0;
+            for(var i = 0; i < checkboxes.length; i++){
+                if(checkboxes[i].checked){
+                    reg += parseInt(checkboxes[i].getAttribute("value"));
+                }
+            }
+            return reg;
+        }
+
         function createMarker(map, coords, text) {
             var markerDOM = JAK.mel("div");
             var markerImg = JAK.mel("img", {src: SMap.CONFIG.img + "/marker/drop-red.png"});
             markerDOM.appendChild(markerImg);
-            var markerText = JAK.mel("div", {}, {position: "absolute", left: "0px", top: "2px", textAlign: "center", width: "22px", color: "white", fontWeight: "bold"});
+            var markerText = JAK.mel("div", {}, {
+                position: "absolute",
+                left: "0px",
+                top: "2px",
+                textAlign: "center",
+                width: "22px",
+                color: "white",
+                fontWeight: "bold"
+            });
             markerText.innerHTML = text;
             markerDOM.appendChild(markerText);
             var marker = new SMap.Marker(coords, text, {url: markerDOM});
@@ -81,7 +100,7 @@
             algorithm = algCombobox.options[algCombobox.selectedIndex].value;
             message = document.getElementById('message').value;
             layer.removeAll();
-            requestString = document.getElementById('url').value + "route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm;
+            requestString = document.getElementById('url').value + "route?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm + "&regions=" + getRegions();
             console.log(requestString);
             $.getJSON(requestString)
                     .done(
@@ -138,7 +157,7 @@
             var algCombobox = document.getElementById('algorithm');
             algorithm = algCombobox.options[algCombobox.selectedIndex].value;
             message = document.getElementById('message').value;
-            requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm + "&message=" + encodeURIComponent(message);
+            requestString = document.getElementById('url').value + "report?latFrom=" + latFrom + "&lonFrom=" + lonFrom + "&latTo=" + latTo + "&lonTo=" + lonTo + "&metric=" + metric + "&algorithm=" + algorithm+ "&regions=" + getRegions() + "&message=" + encodeURIComponent(message);
             console.log(requestString);
             $.getJSON(requestString)
                     .done(
@@ -159,7 +178,8 @@
         input {
             width: 100%;
         }
-        input[type="radio"]{
+
+        input[type="radio"] {
             width: 15px;
         }
     </style>
@@ -174,16 +194,16 @@
             <fieldset>
                 <legend>From</legend>
                 <label for="fromLon">longitude:</label>
-                <input id="fromLon" type="text" name="longitude" th:value="${fromLon}" />
+                <input id="fromLon" type="text" name="longitude" th:value="${fromLon}"/>
                 <label for="fromLat">latitude:</label>
-                <input id="fromLat" type="text" name="latitude" th:value="${fromLat}" />
+                <input id="fromLat" type="text" name="latitude" th:value="${fromLat}"/>
             </fieldset>
             <fieldset>
                 <legend>To</legend>
                 <label for="toLon">longitude:</label>
-                <input id="toLon" type="text" name="longitude" th:value="${toLon}" />
+                <input id="toLon" type="text" name="longitude" th:value="${toLon}"/>
                 <label for="toLat">latitude:</label>
-                <input id="toLat" type="text" name="latitude" th:value="${toLat}" />
+                <input id="toLat" type="text" name="latitude" th:value="${toLat}"/>
             </fieldset>
         </fieldset>
         <fieldset>
@@ -203,6 +223,16 @@
                             th:value="${type.name().toUpperCase()}"
                             th:text="${type.name().toLowerCase()}"/>
                 </select>
+            </fieldset>
+            <fieldset>
+                <legend>Regions</legend>
+                <table>
+                    <tr th:each="region : ${regions}">
+                        <td><input type="checkbox" name="regions" th:value="${region.getValue()}"
+                                   th:checked="checked"/></td>
+                        <td th:text="${region.getName()}"></td>
+                    </tr>
+                </table>
             </fieldset>
         </fieldset>
         <div hidden="hiden">
@@ -239,7 +269,8 @@
     </fieldset>
 </div>
 <div id="static_panel" style="float: left;">
-    <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports spreadsheet</a>
+    <a href="https://docs.google.com/spreadsheets/d/1wZZslGblo-BgZzNTY7vD4HdJy8tso74QsdLU81LmtCM" target="_blank">reports
+        spreadsheet</a>
 </div>
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -287,6 +318,7 @@
                 first = true;
             }
         }
+
         m.getSignals().addListener(window, "map-click", click);
 
         var getUrlParameter = function getUrlParameter(sParam) {
