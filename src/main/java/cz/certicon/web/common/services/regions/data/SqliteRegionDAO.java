@@ -27,7 +27,7 @@ public class SqliteRegionDAO implements RegionDAO {
         try {
             ResultSet rs = database.read( "SELECT * FROM regions WHERE id = " + id );
             if ( rs.next() ) {
-                return new Region( rs.getLong( "id" ), rs.getLong( "cellId" ), rs.getString( "name" ) );
+                return new Region( rs.getLong( "id" ), rs.getLong( "cell_id" ), rs.getString( "name" ) );
             }
             throw new IOException( "Could not find region with id: " + id );
         } catch ( SQLException ex ) {
@@ -41,7 +41,7 @@ public class SqliteRegionDAO implements RegionDAO {
             List<Region> regions = new ArrayList<>();
             ResultSet rs = database.read( "SELECT * FROM regions" );
             while ( rs.next() ) {
-                regions.add( new Region( rs.getLong( "id" ), rs.getLong( "cellId" ), rs.getString( "name" ) ) );
+                regions.add( new Region( rs.getLong( "id" ), rs.getLong( "cell_id" ), rs.getString( "name" ) ) );
             }
             return regions;
         } catch ( SQLException ex ) {

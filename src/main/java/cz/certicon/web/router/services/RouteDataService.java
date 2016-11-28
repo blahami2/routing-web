@@ -6,9 +6,11 @@ import cz.certicon.routing.model.RouteData;
 import cz.certicon.routing.model.graph.Edge;
 import cz.certicon.routing.model.graph.Node;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * @author Michael Blaha {@literal <blahami2@gmail.com>}
@@ -22,7 +24,7 @@ public class RouteDataService {
         this.routeDataDAO = routeDataDAO;
     }
 
-    public <N extends Node<N, E>, E extends Edge<N, E>> RouteData<E> loadRouteData(Route<N,E> route) throws IOException {
+    public <N extends Node<N, E>, E extends Edge<N, E>> RouteData<E> loadRouteData( Route<N, E> route ) throws IOException {
         return routeDataDAO.loadRouteData( route );
     }
 }

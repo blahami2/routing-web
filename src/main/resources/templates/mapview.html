@@ -228,7 +228,7 @@
                 <legend>Regions</legend>
                 <table>
                     <tr th:each="region : ${regions}">
-                        <td><input type="checkbox" name="regions" th:value="${region.getValue()}"
+                        <td><input type="checkbox" name="regions" th:value="${region.getId()}"
                                    th:checked="checked"/></td>
                         <td th:text="${region.getName()}"></td>
                     </tr>

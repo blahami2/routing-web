@@ -2,6 +2,7 @@ package cz.certicon.web.router.services;
 
 import cz.certicon.routing.algorithm.DijkstraAlgorithm;
 import cz.certicon.routing.algorithm.sara.preprocessing.overlay.ZeroNode;
+import cz.certicon.routing.algorithm.sara.query.mld.MLDFullMemoryRouteUnpacker;
 import cz.certicon.routing.algorithm.sara.query.mld.MLDRecursiveRouteUnpacker;
 import cz.certicon.routing.algorithm.sara.query.mld.MultilevelDijkstraAlgorithm;
 import cz.certicon.routing.model.Route;
@@ -17,7 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -53,16 +57,21 @@ public class RouteService {
                     , fromPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), fromPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) )
                     , toPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), toPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) ) );
         } else if ( algorithm.equals( Algorithms.SARA ) ) {
-            long[] array = new long[turnOffCells.size()];
-            graphSupplyService.getOverlayBuilder().turnTopCells( false, toArray( turnOffCells ) );
+            if ( !turnOffCells.isEmpty() ) {
+                Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas off: " + Arrays.toString( toArray( turnOffCells ) ) );
+                graphSupplyService.getOverlayBuilder().turnTopCells( false, toArray( turnOffCells ) );
+            }
             SaraNode saraSource = fromPoint.getNode().orElse( fromPoint.getEdge().get().getTarget() );
             SaraNode saraTarget = toPoint.getNode().orElse( toPoint.getEdge().get().getSource() );
             ZeroNode zeroSource = graphSupplyService.getOverlayBuilder().getZeroNode( saraSource );
             ZeroNode zeroTarget = graphSupplyService.getOverlayBuilder().getZeroNode( saraTarget );
-            MLDRecursiveRouteUnpacker unpacker = new MLDRecursiveRouteUnpacker();
+            MLDFullMemoryRouteUnpacker unpacker = new MLDFullMemoryRouteUnpacker();
             MultilevelDijkstraAlgorithm mldAlg = new MultilevelDijkstraAlgorithm();
-            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), Metric.LENGTH, zeroSource, zeroTarget, unpacker );
-            graphSupplyService.getOverlayBuilder().turnTopCells( true, toArray( turnOffCells ) );
+            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), metric, zeroSource, zeroTarget, unpacker );
+            if ( !turnOffCells.isEmpty() ) {
+                Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas on: " + Arrays.toString( toArray( turnOffCells ) ) );
+                graphSupplyService.getOverlayBuilder().turnTopCells( true, toArray( turnOffCells ) );
+            }
         } else {
             throw new IllegalArgumentException( "Unknown algorithm: " + algorithm.name() );
         }
@@ -72,6 +81,7 @@ public class RouteService {
             time.start();
             RouteData<SaraEdge> routeData = routeDataService.loadRouteData( route.get() );
             time.stop();
+            Logger.getLogger( getClass().getName() ).log( Level.INFO, "Route found: " + routeData.getLength() + ", " + routeData.getTime() );
             Time pathLoadTime = time.getTime();
             // long length, long time, long executionTime, List<Coordinate> coords
             return Optional.of( new RoutingResult(
@@ -80,6 +90,7 @@ public class RouteService {
                     routeTime.getValue( TimeUnits.MILLISECONDS ),
                     routeData.getCoordinates( route.get() ) ) );
         } else {
+            Logger.getLogger( getClass().getName() ).log( Level.WARNING, "Route not found" );
             return Optional.empty();
         }
     }

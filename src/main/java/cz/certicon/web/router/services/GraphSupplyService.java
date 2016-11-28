@@ -19,6 +19,7 @@ public class GraphSupplyService {
     private final SaraGraph graph;
 
     public GraphSupplyService( @Autowired  @Qualifier( "connectionProperties" ) Properties connectionProperties) {
+        OverlayBuilder.keepShortcuts = true;
         OverlayCreator creator = new OverlayCreator();
         OverlayCreator.SaraSetup setup = creator.getSetup();
 
