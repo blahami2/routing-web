@@ -5,6 +5,7 @@ import cz.certicon.routing.algorithm.sara.preprocessing.overlay.OverlayCreator;
 import cz.certicon.routing.model.graph.SaraGraph;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.util.Properties;
@@ -13,6 +14,7 @@ import java.util.Properties;
  * @author Michael Blaha {@literal <blahami2@gmail.com>}
  */
 @Service
+@Scope( "singleton" )
 public class GraphSupplyService {
 
     private final OverlayBuilder overlayBuilder;

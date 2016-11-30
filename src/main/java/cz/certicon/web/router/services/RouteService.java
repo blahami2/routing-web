@@ -15,6 +15,7 @@ import cz.certicon.web.common.model.Algorithms;
 import cz.certicon.web.common.model.RoutingResult;
 import java8.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.logging.Logger;
  * @author Michael Blaha {@literal <blahami2@gmail.com>}
  */
 @Service
+@Scope( "singleton" )
 public class RouteService {
 
     private final GraphSupplyService graphSupplyService;
@@ -40,7 +42,8 @@ public class RouteService {
         this.routeDataService = routeDataService;
     }
 
-    public Optional<RoutingResult> route( Coordinate from, Coordinate to, Algorithms algorithm, Metric metric, Set<Long> turnOffCells ) throws IOException {
+    synchronized public Optional<RoutingResult> route( Coordinate from, Coordinate to, Algorithms algorithm, Metric metric, Set<Long> turnOffCells ) throws IOException {
+        System.out.println( "Routing: " + from + ", " + to + ", " + algorithm + ", " + metric );
         TimeMeasurement time = new TimeMeasurement();
         time.setTimeUnits( TimeUnits.MILLISECONDS );
         SaraGraph graph = graphSupplyService.getGraph();
@@ -53,9 +56,12 @@ public class RouteService {
         time.start();
         if ( algorithm.equals( Algorithms.DIJKSTRA ) ) {
             DijkstraAlgorithm<SaraNode, SaraEdge> dijkstraAlgorithm = new DijkstraAlgorithm<>();
-            route = dijkstraAlgorithm.route( metric, fromPoint.getEdge().get(), toPoint.getEdge().get()
-                    , fromPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), fromPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) )
-                    , toPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), toPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) ) );
+//            System.out.println("source edge = " + fromPoint.getEdge().orElse( null ));
+//            System.out.println("target edge = " + toPoint.getEdge().orElse( null ));
+            route = dijkstraAlgorithm.route( metric, fromPoint, toPoint );
+//            route = dijkstraAlgorithm.route( metric, fromPoint.getEdge().get(), toPoint.getEdge().get()
+//                    , fromPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), fromPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) )
+//                    , toPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), toPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) ) );
         } else if ( algorithm.equals( Algorithms.SARA ) ) {
             if ( !turnOffCells.isEmpty() ) {
                 Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas off: " + Arrays.toString( toArray( turnOffCells ) ) );
@@ -66,8 +72,9 @@ public class RouteService {
             ZeroNode zeroSource = graphSupplyService.getOverlayBuilder().getZeroNode( saraSource );
             ZeroNode zeroTarget = graphSupplyService.getOverlayBuilder().getZeroNode( saraTarget );
             MLDFullMemoryRouteUnpacker unpacker = new MLDFullMemoryRouteUnpacker();
-            MultilevelDijkstraAlgorithm mldAlg = new MultilevelDijkstraAlgorithm();
-            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), metric, zeroSource, zeroTarget, unpacker );
+            MultilevelDijkstraAlgorithm mldAlg = new MultilevelDijkstraAlgorithm( graphSupplyService.getOverlayBuilder(), unpacker );
+//            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), metric, zeroSource, zeroTarget, unpacker );
+            route = mldAlg.route( metric, fromPoint, toPoint );
             if ( !turnOffCells.isEmpty() ) {
                 Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas on: " + Arrays.toString( toArray( turnOffCells ) ) );
                 graphSupplyService.getOverlayBuilder().turnTopCells( true, toArray( turnOffCells ) );

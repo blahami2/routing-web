@@ -49,19 +49,6 @@ public class RouteController {
         Coordinate sourceCoordinate = new Coordinate( latFrom, lonFrom );
         Coordinate targetCoordinate = new Coordinate( latTo, lonTo );
         try {
-//            List<Coordinate> coords = new ArrayList<>();
-//            PointSearcher.PointSearchResult sourcePoint = pointSearcher.findClosestPoint( sourceCoordinate, EnumSet.of( metric ) );
-//            if ( sourcePoint.isCrossroad() ) {
-//                coords.add( sourceCoordinate );
-//            } else {
-//                coords.addAll( graphDataDao.loadEdgeData( sourcePoint.getEdgeId() ).getCoordinates() );
-//            }
-//            PointSearcher.PointSearchResult targetPoint = pointSearcher.findClosestPoint( targetCoordinate, EnumSet.of( metric ) );
-//            if ( targetPoint.isCrossroad() ) {
-//                coords.add( targetCoordinate );
-//            } else {
-//                coords.addAll( graphDataDao.loadEdgeData( targetPoint.getEdgeId() ).getCoordinates() );
-//            }
             List<Region> regionList = regionProvider.getRegions( regions );
             Set<Region> allRegions = new HashSet<>( regionProvider.getRegions() );
             allRegions.removeAll( regionList );

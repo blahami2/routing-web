@@ -13,14 +13,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
-@PropertySource( "connection.properties" )
 @SpringBootApplication
-@Import( { RouterConfiguration.class, MapConfiguration.class } )
+@Import( { RouterConfiguration.class, MapConfiguration.class, RouterConfiguration.class } )
 public class RoutingWebApplication {
 
-    public static void main( String[] args ) {
+    static Properties properties;
+
+    public static void main( String[] args ) throws IOException {
+        if(args.length == 0){
+            throw new IllegalArgumentException( "Must provide web.properties" );
+        }
+        properties = new Properties(  );
+        InputStream in = new FileInputStream( args[0] );
+        properties.load( in );
+        in.close();
         SpringApplication.run( RoutingWebApplication.class, args );
     }
 
@@ -32,11 +44,10 @@ public class RoutingWebApplication {
 
     @Bean
     @Qualifier( "connectionProperties" )
-    public Properties getConnectionProperties( @Value( "${db.spatialite_path}" ) String spatialitePath, @Value( "${db.url}" ) String url, @Value( "${db.driver}" ) String driver ) {
-        Properties properties = new Properties();
-        properties.put( "spatialite_path", spatialitePath );
-        properties.put( "url", url );
-        properties.put( "driver", driver );
+    public Properties getConnectionProperties() {
+        properties.put( "spatialite_path", properties.getProperty( "db.spatialite_path" ) );
+        properties.put( "driver", properties.getProperty( "db.driver" ) );
+        properties.put( "url", properties.getProperty( "db.url" ) );
         return properties;
     }
 }

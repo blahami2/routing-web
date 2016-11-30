@@ -213,6 +213,7 @@
                 <select id="metric" name="metric">
                     <option th:each="type : ${metricOptions}"
                             th:value="${type.name().toUpperCase()}"
+                            th:selected="(${type.name() == metricSelected})"
                             th:text="${type.name().toLowerCase()}"/>
                 </select>
             </fieldset>
@@ -221,15 +222,17 @@
                 <select id="algorithm" name="algorithm">
                     <option th:each="type : ${algorithmOptions}"
                             th:value="${type.name().toUpperCase()}"
+                            th:selected="(${type.name() == algorithmSelected})"
                             th:text="${type.name().toLowerCase()}"/>
                 </select>
             </fieldset>
             <fieldset>
                 <legend>Regions</legend>
+                <img th:src="@{/images/cell_map_small.png}"/>
                 <table>
                     <tr th:each="region : ${regions}">
                         <td><input type="checkbox" name="regions" th:value="${region.getId()}"
-                                   th:checked="checked"/></td>
+                                   th:checked="(${region.isSelected()})"/></td>
                         <td th:text="${region.getName()}"></td>
                     </tr>
                 </table>
