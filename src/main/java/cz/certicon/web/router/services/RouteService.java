@@ -67,10 +67,10 @@ public class RouteService {
                 Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas off: " + Arrays.toString( toArray( turnOffCells ) ) );
                 graphSupplyService.getOverlayBuilder().turnTopCells( false, toArray( turnOffCells ) );
             }
-            SaraNode saraSource = fromPoint.getNode().orElse( fromPoint.getEdge().get().getTarget() );
-            SaraNode saraTarget = toPoint.getNode().orElse( toPoint.getEdge().get().getSource() );
-            ZeroNode zeroSource = graphSupplyService.getOverlayBuilder().getZeroNode( saraSource );
-            ZeroNode zeroTarget = graphSupplyService.getOverlayBuilder().getZeroNode( saraTarget );
+//            SaraNode saraSource = fromPoint.isCrossroad() ? fromPoint.getNode().get() : fromPoint.getEdge().get().getTarget();
+//            SaraNode saraTarget = toPoint.isCrossroad() ? toPoint.getNode().get() : toPoint.getEdge().get().getSource();
+//            ZeroNode zeroSource = graphSupplyService.getOverlayBuilder().getZeroNode( saraSource );
+//            ZeroNode zeroTarget = graphSupplyService.getOverlayBuilder().getZeroNode( saraTarget );
             MLDFullMemoryRouteUnpacker unpacker = new MLDFullMemoryRouteUnpacker();
             MultilevelDijkstraAlgorithm mldAlg = new MultilevelDijkstraAlgorithm( graphSupplyService.getOverlayBuilder(), unpacker );
 //            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), metric, zeroSource, zeroTarget, unpacker );

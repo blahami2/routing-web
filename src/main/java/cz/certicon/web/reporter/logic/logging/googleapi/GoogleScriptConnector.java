@@ -229,6 +229,21 @@ public class GoogleScriptConnector {
 
         volatile String code;
         private final int LOCAL_SERVER_PORT = 10006;
+        private final int PORT;
+
+        public LocalCallbackServer() {
+            int p = LOCAL_SERVER_PORT;
+            for ( int port = LOCAL_SERVER_PORT; port < 65536; port++ ) {
+                try {
+                    ServerSocket ss = new ServerSocket( port );
+                    p = port;
+                    break;
+                } catch ( IOException e ) {
+                    // port not available
+                }
+            }
+            PORT = p;
+        }
 
         @Override
         public synchronized String waitForCode() {
@@ -237,7 +252,7 @@ public class GoogleScriptConnector {
                 this.wait();
             } catch ( Exception ex ) {
             }
-            System.out.println( "returning code is -> " + code );
+  //          System.out.println( "returning code is -> " + code );
             return code;
 
         }
@@ -246,7 +261,7 @@ public class GoogleScriptConnector {
         public String getRedirectUri() {
 
             new Thread( new MyThread() ).start();
-            return "http://localhost:" + LOCAL_SERVER_PORT;
+            return "http://localhost:" + PORT;
         }
 
         @Override
@@ -259,10 +274,10 @@ public class GoogleScriptConnector {
             public void run() {
                 try {
                     //    return GoogleOAuthConstants.OOB_REDIRECT_URI;
-                    ServerSocket ss = new ServerSocket( LOCAL_SERVER_PORT );
-                    System.out.println( "server is ready..." );
+                    ServerSocket ss = new ServerSocket( PORT );
+//                        System.out.println( "server is ready..." );
                     Socket socket = ss.accept();
-                    System.out.println( "new request...." );
+//                        System.out.println( "new request...." );
                     InputStream is = socket.getInputStream();
                     StringWriter writer = new StringWriter();
                     String firstLine = null;
@@ -288,13 +303,12 @@ public class GoogleScriptConnector {
 
                     socket.close();
 
-                    System.out.println( "Extracted coded is " + code );
+                    //                       System.out.println( "Extracted coded is " + code );
 
                     synchronized ( LocalCallbackServer.this ) {
                         LocalCallbackServer.this.notify();
                     }
-                    System.out.println( "return is " + sb.toString() );
-
+                    //                       System.out.println( "return is " + sb.toString() );
                 } catch ( IOException ex ) {
                     Logger.getLogger( LocalCallbackServer.class.getName() ).log( Level.SEVERE, null, ex );
                 }
