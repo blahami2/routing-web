@@ -51,6 +51,9 @@ public class RouteService {
         RoutingPoint<SaraNode, SaraEdge> fromPoint = pointSearchService.search( graph, from, metric );
         RoutingPoint<SaraNode, SaraEdge> toPoint = pointSearchService.search( graph, to, metric );
         time.stop();
+        SaraNode sourceNode = fromPoint.isCrossroad() ? fromPoint.getNode().get() : fromPoint.getEdge().get().getTarget();
+        SaraNode targetNode = toPoint.isCrossroad() ? toPoint.getNode().get() : toPoint.getEdge().get().getSource();
+
         Time pointSearchTime = time.getTime();
         Optional<Route<SaraNode, SaraEdge>> route = Optional.empty();
         time.start();
@@ -58,7 +61,8 @@ public class RouteService {
             DijkstraAlgorithm<SaraNode, SaraEdge> dijkstraAlgorithm = new DijkstraAlgorithm<>();
 //            System.out.println("source edge = " + fromPoint.getEdge().orElse( null ));
 //            System.out.println("target edge = " + toPoint.getEdge().orElse( null ));
-            route = dijkstraAlgorithm.route( metric, fromPoint, toPoint );
+//            route = dijkstraAlgorithm.route( metric, fromPoint, toPoint );
+            route = dijkstraAlgorithm.route( metric, sourceNode, targetNode );
 //            route = dijkstraAlgorithm.route( metric, fromPoint.getEdge().get(), toPoint.getEdge().get()
 //                    , fromPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), fromPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) )
 //                    , toPoint.getDistanceToSource( metric ).orElse( Distance.newInstance( 0 ) ), toPoint.getDistanceToTarget( metric ).orElse( Distance.newInstance( 0 ) ) );
@@ -74,7 +78,8 @@ public class RouteService {
             MLDFullMemoryRouteUnpacker unpacker = new MLDFullMemoryRouteUnpacker();
             MultilevelDijkstraAlgorithm mldAlg = new MultilevelDijkstraAlgorithm( graphSupplyService.getOverlayBuilder(), unpacker );
 //            route = mldAlg.route( graphSupplyService.getOverlayBuilder(), metric, zeroSource, zeroTarget, unpacker );
-            route = mldAlg.route( metric, fromPoint, toPoint );
+//            route = mldAlg.route( metric, fromPoint, toPoint );
+            route = mldAlg.route( metric, sourceNode, targetNode );
             if ( !turnOffCells.isEmpty() ) {
                 Logger.getLogger( getClass().getName() ).log( Level.INFO, "Setting areas on: " + Arrays.toString( toArray( turnOffCells ) ) );
                 graphSupplyService.getOverlayBuilder().turnTopCells( true, toArray( turnOffCells ) );

@@ -2,6 +2,7 @@ package cz.certicon.web.map;
 
 import cz.certicon.routing.model.graph.Metric;
 import cz.certicon.web.common.model.Algorithms;
+import cz.certicon.web.common.model.Metrics;
 import cz.certicon.web.common.model.Region;
 import cz.certicon.web.common.services.regions.RegionProvider;
 import lombok.Value;
@@ -40,7 +41,7 @@ public class MapController {
         model.addObject( "fromLat", "50.1032571" );
         model.addObject( "toLon", "14.3638555" );
         model.addObject( "toLat", "50.0526668" );
-        model.addObject( "metricOptions", Metric.values() );
+        model.addObject( "metricOptions", Metrics.values() );
         model.addObject( "algorithmOptions", Algorithms.values() );
         model.addObject( "regionsId", "regionsId" );
         try {
@@ -67,7 +68,7 @@ public class MapController {
         model.addObject( "fromLat", latFrom );
         model.addObject( "toLon", lonTo );
         model.addObject( "toLat", latTo );
-        model.addObject( "metricOptions", Metric.values() );
+        model.addObject( "metricOptions", Metrics.values() );
         model.addObject( "metricSelected", metricStr );
         model.addObject( "algorithmOptions", Algorithms.values() );
         model.addObject( "algorithmSelected", algorithmStr );
@@ -95,7 +96,7 @@ public class MapController {
         model.addObject( "fromLat", latFrom );
         model.addObject( "toLon", lonTo );
         model.addObject( "toLat", latTo );
-        model.addObject( "metricOptions", Metric.values() );
+        model.addObject( "metricOptions", Metrics.values() );
         model.addObject( "metricSelected", metricStr );
         model.addObject( "algorithmOptions", Algorithms.values() );
         model.addObject( "algorithmSelected", algorithmStr );
