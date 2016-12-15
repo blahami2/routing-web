@@ -34,3 +34,5 @@ nbdist/
 
 *.log
 client_secret.json
+*.lck
+report
